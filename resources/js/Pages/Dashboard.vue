@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import KasirLayout from '@/Layouts/KasirLayout.vue';
 import BbSelect from '@/Components/BbSelect.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { printReceipt } from '@/utils/receipt';
@@ -455,10 +455,10 @@ const getFilteredHistory = (transactions) => {
 <template>
     <Head title="Dashboard" />
 
-    <AuthenticatedLayout>
+    <KasirLayout>
         <template #header>
             <div class="d-flex justify-content-between align-items-center w-100">
-                <h1 class="bb-header-title mb-0"><i class="bi bi-grid-1x2-fill" style="color: #10b981;"></i></h1>
+                <h1 class="bb-header-title mb-0"><i class="bi bi-grid-1x2-fill" style="color: #10b981;"></i> Live Monitoring Meja</h1>
                 <div class="text-end d-none d-sm-block">
                     <div class="fw-bold fs-4 text-gradient" style="line-height: 1.2;">{{ currentTime }}</div>
                     <div class="small text-secondary" style="letter-spacing: 0.5px;">{{ currentDate }}</div>
@@ -1081,5 +1081,5 @@ const getFilteredHistory = (transactions) => {
             </div>
         </div>
 
-    </AuthenticatedLayout>
+    </KasirLayout>
 </template>

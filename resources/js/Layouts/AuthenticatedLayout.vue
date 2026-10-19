@@ -59,7 +59,7 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
         <aside class="bb-sidebar" :class="{ 'bb-sidebar--open': isSidebarOpen }">
             <!-- Logo -->
             <div class="d-flex justify-content-between align-items-center bb-sidebar-logo">
-                <Link :href="route('dashboard')" class="text-decoration-none d-flex align-items-center gap-3 w-100" @click="closeSidebarMobile">
+                <Link :href="route('landing')" class="text-decoration-none d-flex align-items-center gap-3 w-100" @click="closeSidebarMobile">
                     <img src="/poolstream/public/images/logo.png" alt="PoolStream Logo" style="width: 48px; height: 48px; object-fit: contain;">
                     <div class="bb-logo-text">
                         PoolStream
@@ -73,18 +73,20 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 
             <!-- Navigation -->
             <nav class="bb-nav">
-                <Link :href="route('dashboard')" class="bb-nav-link" :class="{ active: route().current('dashboard') }" @click="closeSidebarMobile">
-                    <i class="bi bi-grid-1x2-fill" style="color: #6366f1;"></i>
-                    Live Monitoring
+                <Link :href="route('landing')" class="bb-nav-link" :class="{ active: route().current('landing') }" @click="closeSidebarMobile">
+                    <i class="bi bi-speedometer2" style="color: #06b6d4;"></i>
+                    Menu Utama
                 </Link>
-                <Link :href="route('fnb-orders.index')" class="bb-nav-link" :class="{ active: route().current('fnb-orders.index') }" @click="closeSidebarMobile">
-                    <i class="bi bi-cup-hot-fill" style="color: #f59e0b;"></i>
-                    Pemesanan F&B
-                </Link>
-                
-                <template v-if="$page.props.auth.user.role === 'admin'">
-                    <div class="bb-nav-label">Laporan</div>
 
+                <template v-if="$page.props.auth.user.role === 'admin'">
+                    <div class="bb-nav-label">Admin</div>
+
+                    <Link :href="route('admin.index')" class="bb-nav-link" :class="{ active: route().current('admin.index') }" @click="closeSidebarMobile">
+                        <i class="bi bi-grid-3x3-gap-fill" style="color: #6366f1;"></i>
+                        Panel Admin
+                    </Link>
+
+                    <div class="bb-nav-label">Laporan</div>
                     <Link :href="route('reports.fnb-sales')" class="bb-nav-link" :class="{ active: route().current('reports.fnb-sales') }" @click="closeSidebarMobile">
                         <i class="bi bi-receipt-cutoff" style="color: #f59e0b;"></i>
                         Penjualan F&B
@@ -171,7 +173,7 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
                 </div>
                 
                 <div class="d-flex align-items-center gap-3">
-                    <div class="font-monospace fw-bold px-3 py-1 rounded-3 small" style="background: rgba(16,185,129,0.08); color: #10b981; border: 1px solid rgba(16,185,129,0.15);">
+                    <div class="font-monospace fw-bold px-3 py-1 rounded-3 small d-none d-sm-flex" style="background: rgba(16,185,129,0.08); color: #10b981; border: 1px solid rgba(16,185,129,0.15);">
                         <i class="bi bi-clock me-1"></i>{{ currentTime }}
                     </div>
                     <button @click="toggleTheme" class="bb-theme-toggle">

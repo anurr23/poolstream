@@ -28,7 +28,7 @@ const submit = () => {
         </div>
 
         <h5 class="bb-text-primary fw-bold mb-1">Selamat Datang</h5>
-        <p class="small mb-4 text-secondary">Masuk ke dashboard untuk mengelola meja biliar</p>
+        <p class="small mb-4 text-secondary">Masuk untuk mengelola meja biliar, F&amp;B, dan data usaha</p>
 
         <form @submit.prevent="submit">
             <div class="mb-4">

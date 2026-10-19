@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import KasirLayout from '@/Layouts/KasirLayout.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { printReceipt } from '@/utils/receipt';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
@@ -275,7 +275,7 @@ const checkoutFnbOrder = () => {
 <template>
     <Head title="Pemesanan F&B" />
 
-    <AuthenticatedLayout>
+    <KasirLayout>
         <template #header>
             <div class="d-flex justify-content-between align-items-center w-100">
                 <h1 class="bb-header-title mb-0"><i class="bi bi-cup-hot-fill" style="color: #f59e0b;"></i> Pemesanan F&B</h1>
@@ -722,5 +722,5 @@ const checkoutFnbOrder = () => {
             </div>
         </div>
 
-    </AuthenticatedLayout>
+    </KasirLayout>
 </template>

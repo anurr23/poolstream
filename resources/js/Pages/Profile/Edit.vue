@@ -1,5 +1,5 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import KasirLayout from '@/Layouts/KasirLayout.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -10,7 +10,7 @@ const user = usePage().props.auth.user;
 <template>
     <Head title="Profil Saya" />
 
-    <AuthenticatedLayout>
+    <KasirLayout>
         <template #header>
             <h1 class="bb-header-title"><i class="bi bi-person-circle me-2" style="color: #6366f1;"></i>Profil Saya</h1>
         </template>
@@ -61,5 +61,5 @@ const user = usePage().props.auth.user;
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </KasirLayout>
 </template>

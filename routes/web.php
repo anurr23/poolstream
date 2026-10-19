@@ -12,9 +12,10 @@ use App\Http\Controllers\TransactionItemController;
 use App\Http\Controllers\FnbOrderController;
 use App\Http\Controllers\ReportController;
 
+// Landing page utama (publik). Klik menu diarahkan ke login bila belum ada session.
 Route::get('/', function () {
-    return redirect('/dashboard');
-});
+    return Inertia::render('Landing');
+})->name('landing');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [TableController::class, 'index'])->name('dashboard');
@@ -34,6 +35,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/fnb-orders/{transaction}/checkout', [FnbOrderController::class, 'checkout'])->name('fnb-orders.checkout');
 
     Route::middleware('role:admin')->group(function () {
+        // Admin menu hub
+        Route::get('/master', function () {
+            return Inertia::render('Admin/Index');
+        })->name('admin.index');
+
         Route::get('/master/tables', [TableController::class, 'masterIndex'])->name('tables.index');
         Route::post('/master/tables', [TableController::class, 'store'])->name('tables.store');
         Route::put('/master/tables/{table}', [TableController::class, 'update'])->name('tables.update');

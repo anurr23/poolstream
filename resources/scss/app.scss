@@ -297,6 +297,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1rem;
     background: rgba(255,255,255, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -391,6 +392,29 @@ body {
     font-size: 0.8rem;
     line-height: 1;
     flex-shrink: 0;
+}
+
+// ============================================================
+// 5.1 STANDALONE LAYOUT (Kasir Meja / Kasir F&B)
+// ============================================================
+
+.bb-kasir {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bb-kasir-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 2rem 1.5rem;
+}
+
+@media (max-width: 991.98px) {
+    .bb-kasir-main {
+        padding: 0 1.25rem 1.25rem;
+    }
 }
 
 // ============================================================
@@ -563,6 +587,12 @@ body {
 }
 .bb-btn--ghost:hover {
     background: rgba(0,0,0,0.04);
+}
+.bb-btn--sm {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.72rem;
+    border-radius: 0.6rem;
+    letter-spacing: 0.04em;
 }
 [data-bs-theme="dark"] .bb-btn--ghost {
     border: 1px solid rgba(255,255,255,0.1);
@@ -961,6 +991,489 @@ body {
 }
 
 // ============================================================
+// 13.1 MENU CARDS (Landing / Admin Hub)
+// ============================================================
+
+.bb-menu-card {
+    --bb-menu-accent: #10b981;
+    --bb-menu-accent-2: #059669;
+    --bb-menu-accent-rgb: 16, 185, 129;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.75rem;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+[data-bs-theme="dark"] .bb-menu-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.bb-menu-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--bb-menu-accent), var(--bb-menu-accent-2));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.bb-menu-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(var(--bb-menu-accent-rgb), 0.35);
+    box-shadow: 0 18px 40px rgba(var(--bb-menu-accent-rgb), 0.18);
+    color: inherit;
+}
+[data-bs-theme="dark"] .bb-menu-card:hover {
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+}
+.bb-menu-card:hover::before {
+    opacity: 1;
+}
+
+.bb-menu-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--bb-menu-accent, #10b981), var(--bb-menu-accent-2, #059669));
+    box-shadow: 0 6px 18px rgba(var(--bb-menu-accent-rgb, 16, 185, 129), 0.35);
+    flex-shrink: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.bb-menu-card:hover .bb-menu-icon {
+    transform: scale(1.08) rotate(-4deg);
+}
+
+.bb-menu-title {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #1e293b;
+    margin: 0;
+}
+[data-bs-theme="dark"] .bb-menu-title {
+    color: #f1f5f9;
+}
+
+.bb-menu-desc {
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+}
+[data-bs-theme="dark"] .bb-menu-desc {
+    color: #94a3b8;
+}
+
+.bb-menu-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+[data-bs-theme="dark"] .bb-menu-feature {
+    color: #94a3b8;
+}
+.bb-menu-feature i {
+    color: var(--bb-menu-accent);
+    font-size: 0.9rem;
+}
+
+.bb-menu-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bb-menu-accent);
+}
+.bb-menu-cta i {
+    transition: transform 0.3s ease;
+}
+.bb-menu-card:hover .bb-menu-cta i {
+    transform: translateX(4px);
+}
+
+// Compact variant for hub grids
+.bb-menu-card--sm {
+    padding: 1.25rem;
+}
+.bb-menu-card--sm .bb-menu-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 1.15rem;
+}
+.bb-menu-card--sm .bb-menu-title {
+    font-size: 0.95rem;
+}
+
+// ============================================================
+// 13.2 PUBLIC LANDING PAGE
+// ============================================================
+
+.bb-landing {
+    position: relative;
+    isolation: isolate;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+[data-bs-theme="light"] .bb-landing {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%);
+}
+
+// Aurora: blob cahaya yang bergerak bebas di belakang konten
+.bb-landing::before,
+.bb-landing::after {
+    content: '';
+    position: fixed;
+    inset: -25%;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+.bb-landing::before {
+    background:
+        radial-gradient(38% 34% at 22% 24%, rgba(16,185,129,0.42), transparent 62%),
+        radial-gradient(34% 30% at 76% 18%, rgba(99,102,241,0.38), transparent 62%),
+        radial-gradient(44% 34% at 62% 72%, rgba(6,182,212,0.26), transparent 62%),
+        radial-gradient(28% 26% at 88% 58%, rgba(245,158,11,0.20), transparent 62%);
+    filter: blur(70px);
+    animation: bb-aurora 19s ease-in-out infinite alternate;
+}
+.bb-landing::after {
+    background:
+        radial-gradient(32% 28% at 38% 72%, rgba(139,92,246,0.28), transparent 62%),
+        radial-gradient(28% 24% at 12% 56%, rgba(16,185,129,0.26), transparent 62%),
+        radial-gradient(30% 26% at 70% 30%, rgba(56,189,248,0.18), transparent 62%);
+    filter: blur(80px);
+    animation: bb-aurora-2 25s ease-in-out infinite alternate;
+}
+[data-bs-theme="light"] .bb-landing::before {
+    background:
+        radial-gradient(38% 34% at 22% 24%, rgba(16,185,129,0.20), transparent 62%),
+        radial-gradient(34% 30% at 76% 18%, rgba(99,102,241,0.18), transparent 62%),
+        radial-gradient(44% 34% at 62% 72%, rgba(6,182,212,0.12), transparent 62%),
+        radial-gradient(28% 26% at 88% 58%, rgba(245,158,11,0.12), transparent 62%);
+}
+[data-bs-theme="light"] .bb-landing::after {
+    background:
+        radial-gradient(32% 28% at 38% 72%, rgba(139,92,246,0.14), transparent 62%),
+        radial-gradient(28% 24% at 12% 56%, rgba(16,185,129,0.12), transparent 62%);
+}
+@keyframes bb-aurora {
+    0% { transform: translate3d(-3%, -2%, 0) scale(1); }
+    50% { transform: translate3d(3%, 3%, 0) scale(1.08); }
+    100% { transform: translate3d(-1%, 2%, 0) scale(1.03); }
+}
+@keyframes bb-aurora-2 {
+    0% { transform: translate3d(2%, 3%, 0) scale(1.05); }
+    50% { transform: translate3d(-3%, -2%, 0) scale(1); }
+    100% { transform: translate3d(1%, -3%, 0) scale(1.07); }
+}
+
+// Wave: tiga lapis ombak bergerak di dasar hero
+.bb-landing-wave {
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    height: 175px;
+    overflow: hidden;
+    pointer-events: none;
+}
+.bb-wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    animation: bb-wave 24s linear infinite;
+    will-change: transform;
+}
+.bb-wave--1 {
+    animation-duration: 26s;
+}
+.bb-wave--2 {
+    animation-duration: 34s;
+    animation-direction: reverse;
+}
+.bb-wave--3 {
+    animation-duration: 44s;
+}
+@keyframes bb-wave {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.bb-landing-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1.5rem 5.5rem;
+}
+
+.bb-landing-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.55);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+[data-bs-theme="light"] .bb-landing-footer {
+    color: #64748b;
+    background: rgba(248, 250, 252, 0.72);
+    border-top: 1px solid rgba(0,0,0,0.06);
+}
+.bb-landing-footer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #6366f1);
+    flex-shrink: 0;
+}
+
+.bb-landing-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1.25rem;
+    border-radius: 1rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+[data-bs-theme="light"] .bb-landing-top {
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.bb-landing-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+}
+.bb-landing-brand-name {
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    color: #f1f5f9;
+}
+[data-bs-theme="light"] .bb-landing-brand-name {
+    color: #0f172a;
+}
+.bb-landing-brand-sub {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.bb-landing-user {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.bb-landing-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bb-landing-user-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    color: #e2e8f0;
+}
+[data-bs-theme="light"] .bb-landing-user-name {
+    color: #1e293b;
+}
+.bb-landing-user-role {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.bb-landing-hero {
+    position: relative;
+    text-align: center;
+    padding: 4.5rem 0 5rem;
+}
+@media (max-width: 767.98px) {
+    .bb-landing-hero {
+        padding: 2.5rem 0 3.25rem;
+    }
+    .bb-landing-wave {
+        height: 120px;
+        bottom: -40px;
+    }
+}
+.bb-landing-chip {
+    background: rgba(16,185,129,0.12);
+    color: #10b981;
+    border: 1px solid rgba(16,185,129,0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+}
+.bb-landing-title {
+    font-size: clamp(1.7rem, 4.2vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #f1f5f9;
+    margin: 1rem 0 0.75rem;
+}
+[data-bs-theme="light"] .bb-landing-title {
+    color: #0f172a;
+}
+.bb-landing-sub {
+    color: #94a3b8;
+    font-size: 1rem;
+    max-width: 640px;
+    margin: 0 auto 1.75rem;
+}
+
+.bb-landing-clock {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1.75rem;
+    padding: 0.9rem 2rem 1rem;
+    border-radius: 1.1rem;
+    background: linear-gradient(180deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.03) 100%);
+    border: 1px solid rgba(16,185,129,0.2);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(16,185,129,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+[data-bs-theme="light"] .bb-landing-clock {
+    background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%);
+    border-color: rgba(16,185,129,0.22);
+    box-shadow: 0 10px 30px rgba(16,185,129,0.1), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+.bb-landing-clock-main {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+.bb-landing-time {
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: #34d399;
+    background: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 14px rgba(16,185,129,0.3));
+}
+.bb-landing-date {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+[data-bs-theme="light"] .bb-landing-date {
+    color: #64748b;
+}
+@media (max-width: 575.98px) {
+    .bb-landing-time {
+        font-size: 1.85rem;
+    }
+    .bb-landing-date {
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+    }
+    .bb-landing-clock {
+        padding: 0.8rem 1.5rem 0.9rem;
+    }
+}
+.bb-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    flex-shrink: 0;
+    animation: bb-pulse 2s ease-out infinite;
+}
+@keyframes bb-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+    70% { box-shadow: 0 0 0 9px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+.bb-menu-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+}
+
+.bb-illustration {
+    width: 100%;
+    max-width: 190px;
+    height: auto;
+    color: var(--bb-menu-accent, #10b981);
+    filter: drop-shadow(0 6px 14px rgba(var(--bb-menu-accent-rgb, 16, 185, 129), 0.22));
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.bb-menu-card:hover .bb-illustration {
+    transform: translateY(-4px) scale(1.04);
+}
+
+// ============================================================
 // 14. VUE DATEPICKER OVERRIDES
 // ============================================================
 
@@ -1066,9 +1579,9 @@ body {
 // 10. FLATPICKR THEME INTEGRATION
 // ============================================================
 @import 'flatpickr/dist/flatpickr.css';
+@import 'flatpickr/dist/themes/dark.css';
 
 [data-bs-theme="dark"] {
-    @import 'flatpickr/dist/themes/dark.css';
 
     .flatpickr-calendar {
         background: rgba(30, 41, 59, 0.95) !important;

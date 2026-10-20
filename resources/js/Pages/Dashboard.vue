@@ -193,6 +193,8 @@ const filteredTables = computed(() => {
     if (currentFilter.value === 'ready') return props.tables.filter(t => t.status !== 'active');
     return props.tables;
 });
+const activeCount = computed(() => props.tables.filter(t => t.status === 'active').length);
+const readyCount = computed(() => props.tables.filter(t => t.status !== 'active').length);
 
 let interval;
 onMounted(() => {
@@ -466,91 +468,116 @@ const getFilteredHistory = (transactions) => {
             </div>
         </template>
 
-        <!-- Filters & Mobile Clock -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <div class="d-flex gap-2 flex-wrap">
-                <button @click="currentFilter = 'all'" :class="['bb-btn bb-btn--sm', currentFilter === 'all' ? 'bb-btn--success' : 'bb-btn--ghost']">Semua Meja</button>
-                <button @click="currentFilter = 'active'" :class="['bb-btn bb-btn--sm', currentFilter === 'active' ? 'bb-btn--success' : 'bb-btn--ghost']">Sedang Jalan</button>
-                <button @click="currentFilter = 'ready'" :class="['bb-btn bb-btn--sm', currentFilter === 'ready' ? 'bb-btn--success' : 'bb-btn--ghost']">Kosong</button>
+        <div class="bb-meja-screen">
+        <!-- Toolbar: filter + jam mobile -->
+        <div class="bb-meja-toolbar mb-3">
+            <div class="bb-seg" role="group" aria-label="Filter meja">
+                <button type="button" @click="currentFilter = 'all'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'all' }]">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>Semua
+                    <span class="bb-seg__count">{{ tables.length }}</span>
+                </button>
+                <button type="button" @click="currentFilter = 'active'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'active' }]">
+                    <i class="bi bi-fire"></i>Sedang Jalan
+                    <span class="bb-seg__count">{{ activeCount }}</span>
+                </button>
+                <button type="button" @click="currentFilter = 'ready'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'ready' }]">
+                    <i class="bi bi-record-circle"></i>Kosong
+                    <span class="bb-seg__count">{{ readyCount }}</span>
+                </button>
             </div>
-            
-            <div class="d-flex align-items-center gap-3 ms-auto">
-                <div class="d-sm-none text-end">
-                    <div class="fw-bold text-gradient fs-5">{{ currentTime }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row align-items-start g-4">
-            <!-- Left Side: Table Grid -->
-            <div class="col-12">
-                <!-- Table Grid -->
-                <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
-                    <div v-for="table in filteredTables" :key="table.id" class="h-100">
-                        <div @click="handleTableClick(table)" 
-                             class="bb-table-card w-100 h-100 d-flex flex-column" 
-                             :class="{ 'bb-table-card--active': table.status === 'active' }"
-                             style="cursor: pointer;">
-                            <div class="p-4 d-flex flex-column flex-grow-1">
-                                <!-- Header -->
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h4 class="mb-0 fw-bold">{{ table.name }}</h4>
-                                        <i class="bi" 
-                                           :class="table.status === 'active' ? 'bi-lightbulb-fill' : 'bi-lightbulb'"
-                                           :style="table.status === 'active' ? 'font-size: 1.25rem; color: #f59e0b; filter: drop-shadow(0 0 6px rgba(245,158,11,0.6));' : 'font-size: 1.25rem; opacity: 0.2;'"
-                                           :title="table.status === 'active' ? 'Lampu Menyala' : 'Lampu Mati'"
-                                        ></i>
-                                    </div>
-                                    <span class="bb-status-badge flex-shrink-0" :class="table.status === 'active' ? 'bb-status-badge--active' : 'bb-status-badge--ready'">
-                                        <i :class="table.status === 'active' ? 'bi bi-circle-fill' : 'bi bi-circle'" style="font-size: 0.45rem;"></i>
-                                        {{ table.status === 'active' ? 'In Use' : 'Ready' }}
-                                    </span>
-                                </div>
-
-                                <!-- Timer / Idle -->
-                                <div class="text-center py-4 flex-grow-1 d-flex flex-column justify-content-center">
-                                    <template v-if="table.status === 'active'">
-                                        <div class="text-uppercase small fw-bold mb-2" style="color: #10b981; letter-spacing: 0.15em; font-size: 0.7rem;">Sisa Waktu</div>
-                                        <div class="bb-timer display-4 fw-bold" :class="{ 'bb-timer--expired': timers[table.id] === '00:00:00' }" style="color: #10b981;">
-                                            {{ timers[table.id] || '00:00:00' }}
-                                        </div>
-                                        <!-- F&B item count badge -->
-                                        <div v-if="table.transactions?.[0]?.items?.length > 0" class="mt-2">
-                                            <span class="badge rounded-pill px-2 py-1" style="background: rgba(245,158,11,0.15); color: #f59e0b; font-size: 0.7rem;">
-                                                <i class="bi bi-cup-hot-fill me-1"></i>{{ getItemCount(table.transactions[0]) }} item F&B
-                                            </span>
-                                        </div>
-                                    </template>
-                                    <template v-else>
-                                        <div class="py-2" style="opacity: 0.3;">
-                                            <i class="bi bi-clock" style="font-size: 3rem;"></i>
-                                            <div class="mt-2 fw-semibold">Available</div>
-                                        </div>
-                                    </template>
-                    </div>
-
-                </div>
+            <div class="d-sm-none text-end">
+                <div class="fw-bold text-gradient fs-5">{{ currentTime }}</div>
             </div>
         </div>
 
-                    <!-- Empty State -->
-                    <div v-if="filteredTables.length === 0" class="col-12">
-                        <div class="bb-card text-center py-5">
-                            <div class="bb-card-body">
-                                <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.2;"></i>
-                                <h5 class="mt-3 fw-bold" style="opacity: 0.5;">
-                                    {{ tables.length === 0 ? 'Belum ada meja' : 'Tidak ada meja di kategori ini' }}
-                                </h5>
-                                <p v-if="tables.length === 0" class="text-secondary small mb-3">Tambahkan meja baru melalui menu Kelola Meja</p>
-                                <Link v-if="tables.length === 0" :href="route('tables.index')" class="bb-btn bb-btn--primary">
-                                    <i class="bi bi-plus-lg"></i> Tambah Meja
-                                </Link>
-                            </div>
-                        </div>
+        <!-- Grid meja: kartu selalu center, meja sedikit tidak menempel kiri -->
+        <div class="bb-meja-grid">
+            <div
+                v-for="table in filteredTables"
+                :key="table.id"
+                class="bb-meja-card"
+                :class="{ 'bb-meja-card--active': table.status === 'active' }"
+                role="button"
+                tabindex="0"
+                @click="handleTableClick(table)"
+                @keyup.enter="handleTableClick(table)"
+            >
+                <div class="bb-meja-card__top">
+                    <div class="bb-meja-card__name">
+                        {{ table.name }}
+                        <i class="bi"
+                           :class="table.status === 'active' ? 'bi-lightbulb-fill' : 'bi-lightbulb'"
+                           :title="table.status === 'active' ? 'Lampu Menyala' : 'Lampu Mati'"
+                        ></i>
+                    </div>
+                    <span class="bb-status-badge flex-shrink-0" :class="table.status === 'active' ? 'bb-status-badge--active' : 'bb-status-badge--ready'">
+                        <i :class="table.status === 'active' ? 'bi bi-circle-fill' : 'bi bi-circle'" style="font-size: 0.45rem;"></i>
+                        {{ table.status === 'active' ? 'In Use' : 'Ready' }}
+                    </span>
+                </div>
+
+                <!-- Panel felt meja -->
+                <div class="bb-meja-felt">
+                    <span class="bb-meja-pocket bb-meja-pocket--tl"></span>
+                    <span class="bb-meja-pocket bb-meja-pocket--tr"></span>
+                    <span class="bb-meja-pocket bb-meja-pocket--bl"></span>
+                    <span class="bb-meja-pocket bb-meja-pocket--br"></span>
+
+                    <div class="bb-meja-felt__body">
+                        <template v-if="table.status === 'active'">
+                            <span class="bb-meja-felt__label">Sisa Waktu</span>
+                            <span class="bb-timer bb-meja-felt__clock" :class="{ 'bb-timer--expired': timers[table.id] === '00:00:00' }">
+                                {{ timers[table.id] || '00:00:00' }}
+                            </span>
+                            <span v-if="getItemCount(table.transactions?.[0])" class="bb-meja-fnb">
+                                <i class="bi bi-cup-hot-fill"></i>{{ getItemCount(table.transactions[0]) }} item F&amp;B
+                            </span>
+                        </template>
+                        <template v-else>
+                            <i class="bi bi-hourglass-split bb-meja-felt__icon"></i>
+                            <span class="bb-meja-felt__label bb-meja-felt__label--idle">Tersedia</span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Info sesi -->
+                <div class="bb-meja-card__foot">
+                    <div class="bb-meja-card__meta">
+                        <template v-if="table.status === 'active'">
+                            <span v-if="table.transactions?.[0]?.customer_name" class="bb-meja-meta">
+                                <i class="bi bi-person-fill"></i>{{ table.transactions[0].customer_name }}
+                            </span>
+                            <span v-if="table.transactions?.[0]?.package?.name" class="bb-meja-meta">
+                                <i class="bi bi-trophy-fill"></i>{{ table.transactions[0].package.name }}
+                            </span>
+                            <span v-else-if="table.transactions?.[0]" class="bb-meja-meta">
+                                <i class="bi bi-clock"></i>{{ calculateDuration(table.transactions[0]) }}
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span class="bb-meja-meta bb-meja-meta--idle"><i class="bi bi-arrow-right-circle"></i>Sesi baru</span>
+                        </template>
+                    </div>
+                    <span class="bb-meja-go"><i class="bi bi-arrow-right"></i></span>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-if="filteredTables.length === 0" class="bb-meja-empty">
+                <div class="bb-card text-center py-5">
+                    <div class="bb-card-body">
+                        <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.2;"></i>
+                        <h5 class="mt-3 fw-bold" style="opacity: 0.5;">
+                            {{ tables.length === 0 ? 'Belum ada meja' : 'Tidak ada meja di kategori ini' }}
+                        </h5>
+                        <p v-if="tables.length === 0" class="text-secondary small mb-3">Tambahkan meja baru melalui menu Kelola Meja</p>
+                        <Link v-if="tables.length === 0" :href="route('tables.index')" class="bb-btn bb-btn--primary">
+                            <i class="bi bi-plus-lg"></i> Tambah Meja
+                        </Link>
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
 

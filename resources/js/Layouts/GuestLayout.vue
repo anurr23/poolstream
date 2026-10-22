@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import Logo from '@/Components/Logo.vue';
 
 const isDark = ref(true);
 
@@ -32,7 +33,7 @@ onMounted(() => {
             <!-- Logo -->
             <div class="text-center mb-4">
                 <Link href="/" class="text-decoration-none d-inline-flex align-items-center gap-2">
-                    <img src="/poolstream/public/images/logo.png" alt="PoolStream Logo" style="width: 48px; height: 48px; object-fit: contain;">
+                    <Logo :size="48" />
                     <span class="fw-bolder fs-4 bb-text-primary">PoolStream</span>
                 </Link>
             </div>

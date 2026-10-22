@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import Toast from '@/Components/Toast.vue';
+import Logo from '@/Components/Logo.vue';
 
 const isDark = ref(true);
 const currentTime = ref('');
@@ -60,7 +61,7 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
             <!-- Logo -->
             <div class="d-flex justify-content-between align-items-center bb-sidebar-logo">
                 <Link :href="route('landing')" class="text-decoration-none d-flex align-items-center gap-3 w-100" @click="closeSidebarMobile">
-                    <img src="/poolstream/public/images/logo.png" alt="PoolStream Logo" style="width: 48px; height: 48px; object-fit: contain;">
+                    <Logo :size="48" />
                     <div class="bb-logo-text">
                         PoolStream
                         <small>Management System</small>

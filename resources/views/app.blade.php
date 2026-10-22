@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <link rel="icon" type="image/png" href="/poolstream/public/images/logo.png">
+        <link rel="icon" type="image/svg+xml" href="/poolstream/public/images/logo.svg">
         <title inertia>{{ config('app.name', 'PoolStream') }}</title>
 
         <!-- Fonts -->

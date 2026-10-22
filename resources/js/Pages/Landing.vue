@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import MenuIllustration from '@/Components/MenuIllustration.vue';
+import Logo from '@/Components/Logo.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? null);
@@ -123,7 +124,7 @@ const menus = computed(() => [
             <!-- Top Bar -->
             <div class="bb-landing-top">
                 <Link :href="route('landing')" class="bb-landing-brand">
-                    <img src="/poolstream/public/images/logo.png" alt="PoolStream Logo" class="bb-landing-logo">
+                    <Logo :size="44" class="bb-landing-logo" />
                     <div>
                         <div class="bb-landing-brand-name">PoolStream</div>
                         <div class="bb-landing-brand-sub">Management System</div>

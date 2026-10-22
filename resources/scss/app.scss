@@ -168,6 +168,12 @@ body {
     color: #f1f5f9;
 }
 
+.bb-logo {
+    display: block;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 10px rgba(99, 102, 241, 0.3));
+}
+
 // Sidebar Nav
 .bb-nav {
     padding: 1rem 0.75rem;

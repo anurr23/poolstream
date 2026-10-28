@@ -26,7 +26,7 @@ Laravel 13 + Inertia.js + Vue 3 + Bootstrap 5. SQLite in test/dev, PostgreSQL in
 - **Roles:** `admin` (full access), `kasir` (dashboard only). Enforced by `CheckRole` middleware.
 - **UUIDs:** `User` and `Table` use `HasUuids`. `Transaction`, `TransactionItem`, `Package`, `FnbItem` use auto-increment.
 - **Transactions:** status `active|completed|cancelled`, type `billiard` (table session) or `fnb_only` (standalone F&B). `table_id` nullable for F&B-only. Cost fields (`billiard_cost`, `fnb_cost`, `total_cost`) recalculated via `TransactionService::recalculate()`.
-- **Auth:** username-based (no email column). `password_reset_tokens` keys on `username`. Login via `username` field.
+- **Auth:** username-based (no email column). Login via `username` field. `password_reset_tokens` uses Laravel's default `email` column name but stores the username (see migration `2026_10_28_000000`).
 - **User model:** `photo_path` + `photo_url` accessor, `is_active` boolean, `role` enum, PHP attribute `#[Fillable]`/`#[Hidden]`.
 
 ## Tests

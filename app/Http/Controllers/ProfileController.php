@@ -31,6 +31,6 @@ class ProfileController extends Controller
         unset($validated['photo']);
         $user->update($validated);
 
-        return back()->with('success', 'Profil berhasil diupdate.');
+        return redirect()->route('profile.edit')->with('success', 'Profil berhasil diupdate.');
     }
 }

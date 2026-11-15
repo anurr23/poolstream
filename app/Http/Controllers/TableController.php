@@ -2,30 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Table;
 use App\Models\FnbItem;
+use App\Models\Package;
+use App\Models\Table;
 use App\Models\Transaction;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+use App\Services\TransactionService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class TableController extends Controller
 {
     public function index()
     {
         $tables = Table::with([
-            'transactions' => function($q) {
+            'transactions' => function ($q) {
                 $q->where('status', 'active')->with('items.fnbItem');
             },
-            'recentTransactions'
+            'recentTransactions',
         ])->get()->sortBy('name', SORT_NATURAL)->values();
-        $packages = \App\Models\Package::all();
+        $packages = Package::all();
         $fnbItems = FnbItem::orderBy('name')->get();
+
+        $upcomingBookings = Transaction::with(['table', 'package'])
+            ->where('type', 'billiard')
+            ->where('status', 'booked')
+            ->where('expected_end_time', '>=', Carbon::now())
+            ->orderBy('start_time')
+            ->get();
 
         return Inertia::render('Dashboard', [
             'tables' => $tables,
             'packages' => $packages,
             'fnbItems' => $fnbItems,
+            'upcomingBookings' => $upcomingBookings,
         ]);
     }
 
@@ -33,7 +44,7 @@ class TableController extends Controller
     public function masterIndex()
     {
         return Inertia::render('Master/Tables', [
-            'tables' => Table::all()->sortBy('name', SORT_NATURAL)->values()
+            'tables' => Table::all()->sortBy('name', SORT_NATURAL)->values(),
         ]);
     }
 
@@ -41,7 +52,7 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'relay_channel' => 'required|integer|min:1|max:16'
+            'relay_channel' => 'required|integer|min:1|max:16',
         ]);
 
         Table::create($validated);
@@ -53,7 +64,7 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'relay_channel' => 'required|integer|min:1|max:16'
+            'relay_channel' => 'required|integer|min:1|max:16',
         ]);
 
         $table->update($validated);
@@ -64,6 +75,7 @@ class TableController extends Controller
     public function destroy(Table $table)
     {
         $table->delete();
+
         return back()->with('success', 'Meja berhasil dihapus.');
     }
 
@@ -79,35 +91,53 @@ class TableController extends Controller
         ]);
 
         $table = Table::find($id);
-        $package = \App\Models\Package::find($request->package_id);
+        $package = Package::find($request->package_id);
 
         if ($table && $package) {
+            $startTime = Carbon::now();
+            $endTime = Carbon::now()->addMinutes($request->duration_hours * 60);
+
+            $hasConflict = Transaction::where('table_id', $table->id)
+                ->where('type', 'billiard')
+                ->whereIn('status', ['active', 'booked'])
+                ->where('start_time', '<', $endTime)
+                ->where(function ($query) use ($startTime) {
+                    $query->whereNull('expected_end_time')
+                        ->orWhere('expected_end_time', '>', $startTime);
+                })
+                ->exists();
+
+            if ($table->status === 'active' || $hasConflict) {
+                return back()->with('error', 'Meja sedang dipakai atau sudah memiliki booking pada waktu tersebut.');
+            }
+
             $table->status = 'active';
             $table->save();
-            
+
             // Create Transaction
-            $startTime = Carbon::now();
             $expectedEndTime = Carbon::now()->addMinutes($request->duration_hours * 60);
 
             $transaction = Transaction::create([
                 'type' => 'billiard',
                 'table_id' => $table->id,
                 'package_id' => $package->id,
-                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'user_id' => Auth::id(),
                 'customer_name' => $request->customer_name,
                 'start_time' => $startTime,
                 'expected_end_time' => $expectedEndTime,
                 'billiard_cost' => $package->price * $request->duration_hours,
                 'fnb_cost' => 0,
                 'total_cost' => $package->price * $request->duration_hours,
-                'status' => 'active'
+                'status' => 'active',
             ]);
 
             // Add F&B Items if provided
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
-                    $fnbItem = \App\Models\FnbItem::find($item['fnb_item_id']);
-                    if (!$fnbItem) continue;
+                    $fnbItem = FnbItem::find($item['fnb_item_id']);
+                    if (! $fnbItem) {
+                        continue;
+                    }
 
                     $transaction->items()->create([
                         'fnb_item_id' => $fnbItem->id,
@@ -116,13 +146,13 @@ class TableController extends Controller
                         'subtotal' => $fnbItem->price * $item['quantity'],
                     ]);
                 }
-                \App\Services\TransactionService::recalculate($transaction);
+                TransactionService::recalculate($transaction);
             }
 
             // Execute python script to turn ON relay
             $this->controlRelay($table->relay_channel, 'on');
         }
-        
+
         return back();
     }
 
@@ -144,14 +174,14 @@ class TableController extends Controller
         // VALIDATION: Ensure new duration is not less than the elapsed time
         $elapsedMinutes = Carbon::now()->diffInMinutes(Carbon::parse($transaction->start_time));
         $elapsedHours = $elapsedMinutes / 60;
-        
+
         if ($request->duration_hours < $elapsedHours) {
             return back()->withErrors([
-                'duration_hours' => 'Durasi pesanan tidak boleh kurang dari waktu yang sudah berjalan (' . number_format($elapsedHours, 1) . ' jam).'
+                'duration_hours' => 'Durasi pesanan tidak boleh kurang dari waktu yang sudah berjalan ('.number_format($elapsedHours, 1).' jam).',
             ]);
         }
 
-        $package = \App\Models\Package::find($request->package_id);
+        $package = Package::find($request->package_id);
 
         if ($transaction && $package) {
             // Update package
@@ -160,7 +190,7 @@ class TableController extends Controller
             // Recalculate end time based on original start time
             $originalStartTime = Carbon::parse($transaction->start_time);
             $newExpectedEndTime = $originalStartTime->copy()->addMinutes($request->duration_hours * 60);
-            
+
             $transaction->expected_end_time = $newExpectedEndTime;
 
             // Handle items update
@@ -171,10 +201,14 @@ class TableController extends Controller
                 $transaction->items()->where('quantity', '<=', 0)->delete();
 
                 foreach ($request->items as $item) {
-                    if ($item['quantity'] <= 0) continue;
-                    
-                    $fnbItem = \App\Models\FnbItem::find($item['fnb_item_id']);
-                    if (!$fnbItem) continue;
+                    if ($item['quantity'] <= 0) {
+                        continue;
+                    }
+
+                    $fnbItem = FnbItem::find($item['fnb_item_id']);
+                    if (! $fnbItem) {
+                        continue;
+                    }
 
                     $transaction->items()->updateOrCreate(
                         ['fnb_item_id' => $fnbItem->id],
@@ -191,10 +225,54 @@ class TableController extends Controller
 
             $transaction->billiard_cost = $package->price * $request->duration_hours;
             $transaction->save();
-            \App\Services\TransactionService::recalculate($transaction);
+            TransactionService::recalculate($transaction);
         }
 
         return back()->with('success', 'Sesi berhasil diperbarui.');
+    }
+
+    public function startBooking(Transaction $transaction)
+    {
+        if ($transaction->type !== 'billiard' || $transaction->status !== 'booked') {
+            return back()->with('error', 'Booking tidak valid atau sudah diproses.');
+        }
+
+        $table = $transaction->table;
+
+        if (! $table) {
+            return back()->with('error', 'Meja untuk booking ini tidak ditemukan.');
+        }
+
+        if ($transaction->expected_end_time && $transaction->expected_end_time->isPast()) {
+            return back()->with('error', 'Jadwal booking sudah lewat.');
+        }
+
+        if ($transaction->start_time->gt(Carbon::now()->addMinutes(30))) {
+            return back()->with('error', 'Booking belum bisa dimulai. Tunggu hingga 30 menit sebelum jadwal.');
+        }
+
+        if ($table->status === 'active') {
+            return back()->with('error', 'Meja sedang dipakai sesi lain.');
+        }
+
+        $otherActiveSession = Transaction::where('table_id', $table->id)
+            ->where('status', 'active')
+            ->where('id', '!=', $transaction->id)
+            ->exists();
+
+        if ($otherActiveSession) {
+            return back()->with('error', 'Meja sedang dipakai sesi lain.');
+        }
+
+        $table->status = 'active';
+        $table->save();
+
+        $transaction->status = 'active';
+        $transaction->save();
+
+        $this->controlRelay($table->relay_channel, 'on');
+
+        return back()->with('success', "Booking {$transaction->customer_name} berhasil dimulai.");
     }
 
     public function stop(Request $request, $id)
@@ -209,21 +287,21 @@ class TableController extends Controller
                 ->where('status', 'active')
                 ->with('items.fnbItem')
                 ->first();
-                
+
             if ($transaction) {
                 $transaction->end_time = Carbon::now();
                 $transaction->status = 'completed';
                 $transaction->save();
-                \App\Services\TransactionService::recalculate($transaction);
+                TransactionService::recalculate($transaction);
             }
-            
+
             // Execute python script to turn OFF relay
             $this->controlRelay($table->relay_channel, 'off');
         }
-        
+
         return back();
     }
-    
+
     private function controlRelay($channel, $state)
     {
         $scriptPath = base_path('app/Services/relay_controller.py');
@@ -232,7 +310,7 @@ class TableController extends Controller
         $channelArg = escapeshellarg($channel);
         $stateArg = escapeshellarg($state);
         $scriptPathArg = escapeshellarg($scriptPath);
-        
+
         $command = escapeshellcmd("$pyCmd $scriptPathArg $channelArg $stateArg");
         shell_exec($command);
     }

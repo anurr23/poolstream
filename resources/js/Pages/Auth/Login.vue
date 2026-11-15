@@ -30,9 +30,13 @@ const submit = () => {
         <h5 class="bb-text-primary fw-bold mb-1">Selamat Datang</h5>
         <p class="small mb-4 text-secondary">Masuk untuk mengelola meja biliar, F&amp;B, dan data usaha</p>
 
+        <div v-if="$page.props.errors?.email" class="alert alert-danger rounded-3 mb-4 small">
+            <i class="bi bi-exclamation-circle me-1"></i>{{ $page.props.errors.email }}
+        </div>
+
         <form @submit.prevent="submit">
             <div class="mb-4">
-                <label for="username" class="bb-label text-secondary">Username</label>
+                <label for="username" class="bb-label text-secondary">Username atau Email</label>
                 <input
                     id="username"
                     type="text"
@@ -42,7 +46,7 @@ const submit = () => {
                     required
                     autofocus
                     autocomplete="username"
-                    placeholder="admin"
+                    placeholder="admin atau nama@email.com"
                 />
                 <div v-if="form.errors.username" class="small text-danger mt-1">{{ form.errors.username }}</div>
             </div>
@@ -77,6 +81,21 @@ const submit = () => {
                 <i v-else class="bi bi-box-arrow-in-right"></i>
                 Masuk
             </button>
+
+            <a
+                :href="route('auth.google.redirect')"
+                class="bb-btn bb-btn--ghost w-100 py-3"
+            >
+                <i class="bi bi-google me-2"></i>
+                Masuk dengan Google
+            </a>
+
+            <div class="text-center small mt-4 text-secondary">
+                Belum punya akun?
+                <Link :href="route('register')" class="fw-bold text-decoration-none" style="color: #10b981;">
+                    Daftar sekarang
+                </Link>
+            </div>
         </form>
     </GuestLayout>
 </template>

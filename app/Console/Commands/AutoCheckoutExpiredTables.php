@@ -3,12 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\Transaction;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class AutoCheckoutExpiredTables extends Command
 {
     protected $signature = 'tables:auto-checkout';
+
     protected $description = 'Auto-checkout tables whose session has expired';
 
     public function handle(): int
@@ -26,7 +27,7 @@ class AutoCheckoutExpiredTables extends Command
         foreach ($expired as $transaction) {
             $table = $transaction->table;
 
-            if (!$table) {
+            if (! $table) {
                 continue;
             }
 
@@ -44,6 +45,20 @@ class AutoCheckoutExpiredTables extends Command
             $this->controlRelay($table->relay_channel, 'off');
 
             $this->info("Auto-checkout: {$table->name} ({$transaction->customer_name})");
+        }
+
+        // Cancel bookings that were never started (no-show).
+        $noShowBookings = Transaction::where('type', 'billiard')
+            ->where('status', 'booked')
+            ->whereNotNull('expected_end_time')
+            ->where('expected_end_time', '<=', Carbon::now())
+            ->get();
+
+        foreach ($noShowBookings as $booking) {
+            $booking->status = 'cancelled';
+            $booking->save();
+
+            $this->info("Auto-cancel booking: {$booking->customer_name}");
         }
 
         return self::SUCCESS;

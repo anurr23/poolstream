@@ -19,7 +19,7 @@ const {
     paginatedData,
     nextPage,
     prevPage,
-} = useDatatable(usersRef, ['name', 'username', 'role']);
+} = useDatatable(usersRef, ['name', 'username', 'email', 'role']);
 
 const isEditing = ref(false);
 const editId = ref(null);
@@ -27,13 +27,15 @@ const showModal = ref(false);
 
 const roleOptions = [
     { value: 'kasir', label: 'Kasir' },
-    { value: 'admin', label: 'Admin' }
+    { value: 'admin', label: 'Admin' },
+    { value: 'customer', label: 'Customer' }
 ];
 
 const form = useForm({
     _method: 'post',
     name: '',
     username: '',
+    email: '',
     role: 'kasir',
     is_active: true,
     password: '',
@@ -78,6 +80,7 @@ const editUser = (user) => {
     form._method = 'put';
     form.name = user.name;
     form.username = user.username;
+    form.email = user.email || '';
     form.role = user.role;
     form.is_active = user.is_active;
     form.password = '';
@@ -100,6 +103,7 @@ const submit = () => {
     formData.append('_method', 'PUT');
     formData.append('name', form.name);
     formData.append('username', form.username);
+    formData.append('email', form.email || '');
     formData.append('role', form.role);
     formData.append('is_active', form.is_active ? '1' : '0');
     if (form.password) formData.append('password', form.password);
@@ -210,11 +214,14 @@ const toggleActive = (user) => {
                                         </div>
                                     </td>
                                     <td class="fw-bold">{{ user.name }}</td>
-                                    <td>{{ user.username }}</td>
+                                    <td>
+                                        <div>{{ user.username }}</div>
+                                        <div class="small text-secondary">{{ user.email || '-' }}</div>
+                                    </td>
                                     <td>
                                         <span class="bb-badge text-capitalize" 
-                                            :style="user.role === 'admin' ? 'background: rgba(139,92,246,0.1); color: #8b5cf6;' : 'background: rgba(56,189,248,0.1); color: #38bdf8;'">
-                                            <i class="bi" :class="user.role === 'admin' ? 'bi-shield-lock' : 'bi-person'"></i> {{ user.role }}
+                                            :style="user.role === 'admin' ? 'background: rgba(139,92,246,0.1); color: #8b5cf6;' : (user.role === 'customer' ? 'background: rgba(6,182,212,0.1); color: #06b6d4;' : 'background: rgba(56,189,248,0.1); color: #38bdf8;')">
+                                            <i class="bi" :class="user.role === 'admin' ? 'bi-shield-lock' : (user.role === 'customer' ? 'bi-person-badge' : 'bi-person')"></i> {{ user.role }}
                                         </span>
                                     </td>
                                     <td>
@@ -304,6 +311,11 @@ const toggleActive = (user) => {
                             <label class="bb-label text-secondary">Username</label>
                             <input type="text" v-model="form.username" required  class="bb-input w-100 mt-1" :class="{'border-danger': form.errors.username}" />
                             <div v-if="form.errors.username" class="small text-danger mt-1">{{ form.errors.username }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="bb-label text-secondary">Email <span class="text-secondary fw-normal">(opsional)</span></label>
+                            <input type="email" v-model="form.email" class="bb-input w-100 mt-1" :class="{'border-danger': form.errors.email}" placeholder="nama@email.com" />
+                            <div v-if="form.errors.email" class="small text-danger mt-1">{{ form.errors.email }}</div>
                         </div>
                         <div class="mb-3">
                             <label class="bb-label text-secondary">Role</label>

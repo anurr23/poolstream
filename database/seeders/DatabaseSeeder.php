@@ -2,10 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Models\FnbItem;
+use App\Models\Package;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,7 +24,7 @@ class DatabaseSeeder extends Seeder
         Storage::disk('public')->makeDirectory('user_photos');
         Storage::disk('public')->makeDirectory('fnb_images');
 
-        $adminSvg = <<<SVG
+        $adminSvg = <<<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
     <linearGradient id="adminBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -51,7 +55,7 @@ class DatabaseSeeder extends Seeder
 </svg>
 SVG;
 
-        $kasirSvg = <<<SVG
+        $kasirSvg = <<<'SVG'
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <defs>
     <linearGradient id="kasirBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -93,58 +97,71 @@ SVG;
         User::factory()->create([
             'name' => 'Admin System',
             'username' => 'admin',
+            'email' => 'admin@poolstream.test',
+            'email_verified_at' => now(),
             'role' => 'admin',
             'password' => bcrypt('password'),
-            'photo_path' => 'user_photos/admin.svg'
+            'photo_path' => 'user_photos/admin.svg',
         ]);
 
         User::factory()->create([
             'name' => 'Kasir 1',
             'username' => 'kasir',
+            'email' => 'kasir@poolstream.test',
+            'email_verified_at' => now(),
             'role' => 'kasir',
             'password' => bcrypt('password'),
-            'photo_path' => 'user_photos/kasir.svg'
+            'photo_path' => 'user_photos/kasir.svg',
         ]);
 
-        \App\Models\Package::create(['name' => 'Regular Siang', 'price' => 25000]);
-        \App\Models\Package::create(['name' => 'Regular Malam', 'price' => 35000]);
-        \App\Models\Package::create(['name' => 'VIP', 'price' => 50000]);
-        
-        for($i = 1; $i <= 16; $i++) {
-            \App\Models\Table::create(['name' => 'Meja ' . $i, 'relay_channel' => $i]);
+        User::factory()->create([
+            'name' => 'Customer Demo',
+            'username' => 'customer',
+            'email' => 'customer@poolstream.test',
+            'email_verified_at' => now(),
+            'role' => 'customer',
+            'password' => bcrypt('password'),
+        ]);
+
+        Package::create(['name' => 'Regular Siang', 'price' => 25000]);
+        Package::create(['name' => 'Regular Malam', 'price' => 35000]);
+        Package::create(['name' => 'VIP', 'price' => 50000]);
+
+        for ($i = 1; $i <= 16; $i++) {
+            Table::create(['name' => 'Meja '.$i, 'relay_channel' => $i]);
         }
 
         $itemMeta = [
-            'Es Teh Manis'         => ['icon' => '🧋', 'bg1' => '#0284c7', 'bg2' => '#0369a1', 'tag' => 'DINGIN • MANIS'],
-            'Es Teh Tawar'         => ['icon' => '🥤', 'bg1' => '#0ea5e9', 'bg2' => '#0284c7', 'tag' => 'SEGAR ALAMI'],
-            'Es Jeruk Segar'       => ['icon' => '🍊', 'bg1' => '#ea580c', 'bg2' => '#c2410c', 'tag' => 'PERASAN ASLI'],
-            'Es Lemon Tea'         => ['icon' => '🍋', 'bg1' => '#ca8a04', 'bg2' => '#a16207', 'tag' => 'ASAM MANIS'],
-            'Es Milo'              => ['icon' => '🍫', 'bg1' => '#78350f', 'bg2' => '#451a03', 'tag' => 'COKELAT PEKAT'],
-            'Es Good Day'          => ['icon' => '☕', 'bg1' => '#854d0e', 'bg2' => '#713f12', 'tag' => 'KOPI DINGIN'],
-            'Es Nutrisari'         => ['icon' => '🍹', 'bg1' => '#f97316', 'bg2' => '#c2410c', 'tag' => 'SARI JERUK'],
-            'Air Mineral'          => ['icon' => '💧', 'bg1' => '#0284c7', 'bg2' => '#075985', 'tag' => 'MINERAL SEGAR'],
+            'Es Teh Manis' => ['icon' => '🧋', 'bg1' => '#0284c7', 'bg2' => '#0369a1', 'tag' => 'DINGIN • MANIS'],
+            'Es Teh Tawar' => ['icon' => '🥤', 'bg1' => '#0ea5e9', 'bg2' => '#0284c7', 'tag' => 'SEGAR ALAMI'],
+            'Es Jeruk Segar' => ['icon' => '🍊', 'bg1' => '#ea580c', 'bg2' => '#c2410c', 'tag' => 'PERASAN ASLI'],
+            'Es Lemon Tea' => ['icon' => '🍋', 'bg1' => '#ca8a04', 'bg2' => '#a16207', 'tag' => 'ASAM MANIS'],
+            'Es Milo' => ['icon' => '🍫', 'bg1' => '#78350f', 'bg2' => '#451a03', 'tag' => 'COKELAT PEKAT'],
+            'Es Good Day' => ['icon' => '☕', 'bg1' => '#854d0e', 'bg2' => '#713f12', 'tag' => 'KOPI DINGIN'],
+            'Es Nutrisari' => ['icon' => '🍹', 'bg1' => '#f97316', 'bg2' => '#c2410c', 'tag' => 'SARI JERUK'],
+            'Air Mineral' => ['icon' => '💧', 'bg1' => '#0284c7', 'bg2' => '#075985', 'tag' => 'MINERAL SEGAR'],
 
-            'Kopi Tubruk'          => ['icon' => '☕', 'bg1' => '#451a03', 'bg2' => '#1c0a00', 'tag' => 'KOPI HITAM'],
-            'Kopi Susu'            => ['icon' => '☕', 'bg1' => '#92400e', 'bg2' => '#78350f', 'tag' => 'KOPI SUSU'],
-            'Teh Panas'            => ['icon' => '🍵', 'bg1' => '#15803d', 'bg2' => '#166534', 'tag' => 'HANGAT ALAMI'],
-            'Kapal Api'            => ['icon' => '☕', 'bg1' => '#451a03', 'bg2' => '#1c0a00', 'tag' => 'LEGENDARIS'],
-            'Indocafe'             => ['icon' => '☕', 'bg1' => '#854d0e', 'bg2' => '#713f12', 'tag' => 'KOPI KRIMER'],
+            'Kopi Tubruk' => ['icon' => '☕', 'bg1' => '#451a03', 'bg2' => '#1c0a00', 'tag' => 'KOPI HITAM'],
+            'Kopi Susu' => ['icon' => '☕', 'bg1' => '#92400e', 'bg2' => '#78350f', 'tag' => 'KOPI SUSU'],
+            'Teh Panas' => ['icon' => '🍵', 'bg1' => '#15803d', 'bg2' => '#166534', 'tag' => 'HANGAT ALAMI'],
+            'Kapal Api' => ['icon' => '☕', 'bg1' => '#451a03', 'bg2' => '#1c0a00', 'tag' => 'LEGENDARIS'],
+            'Indocafe' => ['icon' => '☕', 'bg1' => '#854d0e', 'bg2' => '#713f12', 'tag' => 'KOPI KRIMER'],
 
-            'Kentang Goreng'       => ['icon' => '🍟', 'bg1' => '#db2777', 'bg2' => '#9d174d', 'tag' => 'CRISPY GURIH'],
-            'Pisang Goreng'        => ['icon' => '🍌', 'bg1' => '#d97706', 'bg2' => '#b45309', 'tag' => 'MANIS RENYAH'],
-            'Roti Bakar'           => ['icon' => '🍞', 'bg1' => '#b45309', 'bg2' => '#78350f', 'tag' => 'PANGGANG GURIH'],
-            'French Fries'         => ['icon' => '🍟', 'bg1' => '#e11d48', 'bg2' => '#9f1239', 'tag' => 'GOLDEN FRIES'],
-            'Chicken Wings'        => ['icon' => '🍗', 'bg1' => '#dc2626', 'bg2' => '#991b1b', 'tag' => 'SPICY CRISPY'],
-            'Nugget Goreng'        => ['icon' => '🍢', 'bg1' => '#d97706', 'bg2' => '#9a3412', 'tag' => 'CRISPY NUGGET'],
+            'Kentang Goreng' => ['icon' => '🍟', 'bg1' => '#db2777', 'bg2' => '#9d174d', 'tag' => 'CRISPY GURIH'],
+            'Pisang Goreng' => ['icon' => '🍌', 'bg1' => '#d97706', 'bg2' => '#b45309', 'tag' => 'MANIS RENYAH'],
+            'Roti Bakar' => ['icon' => '🍞', 'bg1' => '#b45309', 'bg2' => '#78350f', 'tag' => 'PANGGANG GURIH'],
+            'French Fries' => ['icon' => '🍟', 'bg1' => '#e11d48', 'bg2' => '#9f1239', 'tag' => 'GOLDEN FRIES'],
+            'Chicken Wings' => ['icon' => '🍗', 'bg1' => '#dc2626', 'bg2' => '#991b1b', 'tag' => 'SPICY CRISPY'],
+            'Nugget Goreng' => ['icon' => '🍢', 'bg1' => '#d97706', 'bg2' => '#9a3412', 'tag' => 'CRISPY NUGGET'],
 
-            'Nasi Goreng'          => ['icon' => '🍳', 'bg1' => '#16a34a', 'bg2' => '#15803d', 'tag' => 'SPESIAL BILIAR'],
-            'Mie Goreng'           => ['icon' => '🍜', 'bg1' => '#d97706', 'bg2' => '#b45309', 'tag' => 'GORENG SPESIAL'],
-            'Mie Rebus'            => ['icon' => '🍲', 'bg1' => '#ca8a04', 'bg2' => '#854d0e', 'tag' => 'KUAH HANGAT'],
-            'Nasi Ayam Goreng'     => ['icon' => '🍗', 'bg1' => '#b45309', 'bg2' => '#78350f', 'tag' => 'AYAM & SAMBAL'],
-            'Nasi Rendang'         => ['icon' => '🥩', 'bg1' => '#831843', 'bg2' => '#500724', 'tag' => 'DAGING EMPUK'],
-            'Gado-gado'            => ['icon' => '🥗', 'bg1' => '#15803d', 'bg2' => '#14532d', 'tag' => 'BUMBU KACANG'],
+            'Nasi Goreng' => ['icon' => '🍳', 'bg1' => '#16a34a', 'bg2' => '#15803d', 'tag' => 'SPESIAL BILIAR'],
+            'Mie Goreng' => ['icon' => '🍜', 'bg1' => '#d97706', 'bg2' => '#b45309', 'tag' => 'GORENG SPESIAL'],
+            'Mie Rebus' => ['icon' => '🍲', 'bg1' => '#ca8a04', 'bg2' => '#854d0e', 'tag' => 'KUAH HANGAT'],
+            'Nasi Ayam Goreng' => ['icon' => '🍗', 'bg1' => '#b45309', 'bg2' => '#78350f', 'tag' => 'AYAM & SAMBAL'],
+            'Nasi Rendang' => ['icon' => '🥩', 'bg1' => '#831843', 'bg2' => '#500724', 'tag' => 'DAGING EMPUK'],
+            'Gado-gado' => ['icon' => '🥗', 'bg1' => '#15803d', 'bg2' => '#14532d', 'tag' => 'BUMBU KACANG'],
             'Sate Ayam (10 tusuk)' => ['icon' => '🍢', 'bg1' => '#c2410c', 'bg2' => '#7c2d12', 'tag' => 'SATE PANGGANG'],
-            'Sosis Goreng'         => ['icon' => '🌭', 'bg1' => '#e11d48', 'bg2' => '#881337', 'tag' => 'SOSIS JUMBO'],
+            'Sosis Goreng' => ['icon' => '🌭', 'bg1' => '#e11d48', 'bg2' => '#881337', 'tag' => 'SOSIS JUMBO'],
         ];
 
         $fnbItems = [
@@ -189,12 +206,12 @@ SVG;
                 'icon' => '🍽️',
                 'bg1' => '#0284c7',
                 'bg2' => '#0369a1',
-                'tag' => strtoupper($item['category'] ?? 'MENU')
+                'tag' => strtoupper($item['category'] ?? 'MENU'),
             ];
 
-            $slug = \Illuminate\Support\Str::slug($item['name']);
+            $slug = Str::slug($item['name']);
             $filename = "fnb_images/{$slug}.svg";
-            $formattedPrice = 'Rp ' . number_format($item['price'], 0, ',', '.');
+            $formattedPrice = 'Rp '.number_format($item['price'], 0, ',', '.');
             $safeName = htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8');
             $safeTag = htmlspecialchars($meta['tag'], ENT_QUOTES, 'UTF-8');
             $safePrice = htmlspecialchars($formattedPrice, ENT_QUOTES, 'UTF-8');
@@ -226,7 +243,7 @@ SVG;
 
             Storage::disk('public')->put($filename, $svg);
 
-            \App\Models\FnbItem::create(array_merge($item, ['image_path' => $filename]));
+            FnbItem::create(array_merge($item, ['image_path' => $filename]));
         }
     }
 }

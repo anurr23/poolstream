@@ -44,6 +44,30 @@ defineProps({
         <path d="M132 110 L100 80" stroke="currentColor" stroke-opacity="0.55" stroke-width="5" stroke-linecap="round" />
     </svg>
 
+    <!-- Customer: kalender booking -->
+    <svg v-else-if="type === 'customer'" viewBox="0 0 160 120" fill="none" class="bb-illustration">
+        <rect x="22" y="20" width="116" height="88" rx="10" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-opacity="0.4" stroke-width="2" />
+        <rect x="22" y="20" width="116" height="20" rx="10" fill="currentColor" fill-opacity="0.25" />
+        <rect x="22" y="30" width="116" height="10" fill="currentColor" fill-opacity="0.25" />
+        <rect x="40" y="14" width="6" height="14" rx="3" fill="currentColor" fill-opacity="0.55" />
+        <rect x="114" y="14" width="6" height="14" rx="3" fill="currentColor" fill-opacity="0.55" />
+        <circle cx="46" cy="56" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="64" cy="56" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="82" cy="56" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="100" cy="56" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="118" cy="56" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="46" cy="74" r="4" fill="currentColor" fill-opacity="0.35" />
+        <rect x="60" y="68" width="24" height="24" rx="6" fill="currentColor" fill-opacity="0.75" />
+        <circle cx="72" cy="76" r="4" fill="#ffffff" />
+        <path d="M64 88 C64 82, 68 80, 72 80 C76 80, 80 82, 80 88 Z" fill="#ffffff" />
+        <circle cx="100" cy="74" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="118" cy="74" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="46" cy="92" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="64" cy="92" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="82" cy="92" r="4" fill="currentColor" fill-opacity="0.35" />
+        <circle cx="100" cy="92" r="4" fill="currentColor" fill-opacity="0.35" />
+    </svg>
+
     <!-- Kasir F&B: kopi + struk -->
     <svg v-else viewBox="0 0 160 120" fill="none" class="bb-illustration">
         <path d="M36 26 q5 -7 0 -14 M48 26 q5 -7 0 -14 M60 26 q5 -7 0 -14" stroke="currentColor" stroke-opacity="0.4" stroke-width="3" stroke-linecap="round" />

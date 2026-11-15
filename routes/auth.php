@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -12,6 +14,18 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('register', [RegisteredUserController::class, 'create'])
+        ->name('register');
+
+    Route::post('register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:6,1');
+
+    Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->name('auth.google.redirect');
+
+    Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->name('auth.google.callback');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
@@ -37,4 +51,3 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
-

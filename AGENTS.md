@@ -23,10 +23,10 @@ Laravel 13 + Inertia.js + Vue 3 + Bootstrap 5. SQLite in test/dev, PostgreSQL in
 
 ## Domain Model
 
-- **Roles:** `admin` (full access), `kasir` (dashboard only). Enforced by `CheckRole` middleware.
+- **Roles:** `admin` (full access), `kasir` (dashboard only), `customer` (online booking only). Enforced by `CheckRole` middleware (`role:admin,kasir` etc.).
 - **UUIDs:** `User` and `Table` use `HasUuids`. `Transaction`, `TransactionItem`, `Package`, `FnbItem` use auto-increment.
-- **Transactions:** status `active|completed|cancelled`, type `billiard` (table session) or `fnb_only` (standalone F&B). `table_id` nullable for F&B-only. Cost fields (`billiard_cost`, `fnb_cost`, `total_cost`) recalculated via `TransactionService::recalculate()`.
-- **Auth:** username-based (no email column). Login via `username` field. `password_reset_tokens` uses Laravel's default `email` column name but stores the username (see migration `2026_10_28_000000`).
+- **Transactions:** status `booked|active|completed|cancelled`, type `billiard` (table session) or `fnb_only` (standalone F&B). `table_id` nullable for F&B-only. Cost fields (`billiard_cost`, `fnb_cost`, `total_cost`) recalculated via `TransactionService::recalculate()`. `booked` rows are future reservations created by customers; cashier starts them from the dashboard (`tables.start-booking`) within 30 minutes of the scheduled start.
+- **Auth:** username-based (no email login requirement for staff), but users now have an optional `email`; customers can self-register at `/register` with a 6-digit email OTP and must verify before booking (`customer.verified` middleware). Optional Google OAuth via `laravel/socialite`. `password_reset_tokens` uses Laravel's default `email` column name but stores the username (see migration `2026_10_28_000000`). OTP fields live on `users` (`otp_code` hashed, `otp_expires_at`, `otp_attempts`).
 - **User model:** `photo_path` + `photo_url` accessor, `is_active` boolean, `role` enum, PHP attribute `#[Fillable]`/`#[Hidden]`.
 
 ## Tests

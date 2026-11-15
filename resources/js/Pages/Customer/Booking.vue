@@ -33,7 +33,6 @@ const tomorrow = computed(() => {
 
 const step = ref(1);
 const selectedDate = ref(props.today);
-
 const fpConfig = computed(() => ({
     dateFormat: 'Y-m-d',
     altInput: true,
@@ -53,7 +52,6 @@ const timeConfig = {
     minuteIncrement: 30,
     disableMobile: true,
 };
-
 const tables = ref([]);
 const loadingTables = ref(false);
 const selectedTable = ref(null);

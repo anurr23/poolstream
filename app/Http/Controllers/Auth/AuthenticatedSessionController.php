@@ -50,7 +50,17 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('customer.home');
         }
 
-        return redirect()->intended(route('landing'));
+        if ($user->role === 'admin') {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('landing');
+        }
+
+        if ($user->role === 'kasir') {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return redirect()->route('landing');
     }
 
     /**

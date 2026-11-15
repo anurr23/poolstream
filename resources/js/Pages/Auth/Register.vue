@@ -122,6 +122,7 @@ onUnmounted(() => {
                     :class="{ 'border-danger': form.errors.name }"
                     v-model="form.name"
                     required
+                    autofocus
                     autocomplete="name"
                     placeholder="Nama Anda"
                 />
@@ -184,11 +185,7 @@ onUnmounted(() => {
 
             <div class="text-center small mt-3 text-secondary">
                 Sudah punya akun?
-                <Link
-                    :href="route().has('login') ? route('login') : '/login'"
-                    class="fw-bold text-decoration-none ms-1"
-                    style="color: #10b981; cursor: pointer;"
-                >
+                <Link :href="route('login')" class="fw-bold text-decoration-none" style="color: #10b981;">
                     Masuk
                 </Link>
             </div>

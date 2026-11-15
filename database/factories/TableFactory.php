@@ -21,6 +21,7 @@ class TableFactory extends Factory
             'name' => 'Meja ' . $this->faker->unique()->numberBetween(1, 99),
             'relay_channel' => $this->faker->unique()->numberBetween(1, 16),
             'status' => 'inactive',
+            'is_light_on' => false,
         ];
     }
 }

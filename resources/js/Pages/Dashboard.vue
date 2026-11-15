@@ -3,7 +3,7 @@ import KasirLayout from '@/Layouts/KasirLayout.vue';
 import BbSelect from '@/Components/BbSelect.vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { printReceipt } from '@/utils/receipt';
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 
 const props = defineProps({
     tables: {
@@ -50,7 +50,17 @@ const formatBookingShort = (value) => {
         : { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
+const formatBookingFull = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    const now = new Date();
+    const sameDay = date.toDateString() === now.toDateString();
+    const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return sameDay ? `Hari ini, ${timeStr}` : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
+
 const startBooking = (booking) => {
+    showBookingModal.value = false;
     router.post(route('tables.start-booking', booking.id), {}, { preserveScroll: true });
 };
 
@@ -68,6 +78,34 @@ const packageOptions = computed(() => {
         value: pkg.id
     }));
 });
+
+// ─── Booking Modal State ───────────────────────────────────
+const showBookingModal = ref(false);
+
+// ─── Manual Light Control ──────────────────────────────────
+const togglingLight = ref(false);
+
+const toggleTableLight = (table) => {
+    if (!table || togglingLight.value) return;
+    togglingLight.value = true;
+    router.post(route('tables.toggle-light', table.id), {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            togglingLight.value = false;
+        }
+    });
+};
+
+watch(() => props.tables, (newTables) => {
+    if (selectedTableForHistory.value) {
+        const found = newTables.find(t => t.id === selectedTableForHistory.value.id);
+        if (found) selectedTableForHistory.value = found;
+    }
+    if (selectedActiveTable.value) {
+        const found = newTables.find(t => t.id === selectedActiveTable.value.id);
+        if (found) selectedActiveTable.value = found;
+    }
+}, { deep: true });
 
 // ─── Table History Modal State ─────────────────────────────
 const showTableHistoryModal = ref(false);
@@ -495,9 +533,26 @@ const getFilteredHistory = (transactions) => {
 
     <KasirLayout>
         <template #header>
-            <div class="d-flex justify-content-between align-items-center w-100">
-                <h1 class="bb-header-title mb-0"><i class="bi bi-grid-1x2-fill" style="color: #10b981;"></i> Live Monitoring Meja</h1>
-                <div class="text-end d-none d-sm-block">
+            <div class="d-flex justify-content-between align-items-center w-100 min-w-0">
+                <div class="d-flex align-items-center gap-2 min-w-0">
+                    <h1 class="bb-header-title mb-0 fs-6 fs-sm-5 text-truncate">
+                        <i class="bi bi-grid-1x2-fill" style="color: #10b981;"></i>
+                        <span class="d-none d-md-inline">Live </span>Monitoring Meja
+                    </h1>
+                    <button
+                        v-if="upcomingBookings.length > 0"
+                        type="button"
+                        class="bb-btn bb-btn--ghost d-flex align-items-center gap-1 py-1 px-2 px-sm-3 border flex-shrink-0"
+                        style="border-color: rgba(6, 182, 212, 0.4) !important; color: #06b6d4; border-radius: 50rem; font-size: 0.78rem;"
+                        title="Daftar Booking"
+                        @click="showBookingModal = true"
+                    >
+                        <i class="bi bi-calendar2-check-fill"></i>
+                        <span class="d-none d-sm-inline fw-semibold ms-1">Booking</span>
+                        <span class="badge rounded-pill bg-info text-dark px-1 py-0 ms-1" style="font-size: 0.72rem;">{{ upcomingBookings.length }}</span>
+                    </button>
+                </div>
+                <div class="text-end d-none d-sm-block flex-shrink-0">
                     <div class="fw-bold fs-4 text-gradient" style="line-height: 1.2;">{{ currentTime }}</div>
                     <div class="small text-secondary" style="letter-spacing: 0.5px;">{{ currentDate }}</div>
                 </div>
@@ -509,76 +564,23 @@ const getFilteredHistory = (transactions) => {
         <div class="bb-meja-toolbar mb-3">
             <div class="bb-seg" role="group" aria-label="Filter meja">
                 <button type="button" @click="currentFilter = 'all'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'all' }]">
-                    <i class="bi bi-grid-3x3-gap-fill"></i>Semua
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                    <span>Semua</span>
                     <span class="bb-seg__count">{{ tables.length }}</span>
                 </button>
                 <button type="button" @click="currentFilter = 'active'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'active' }]">
-                    <i class="bi bi-fire"></i>Sedang Jalan
+                    <i class="bi bi-fire"></i>
+                    <span><span class="d-none d-sm-inline">Sedang </span>Jalan</span>
                     <span class="bb-seg__count">{{ activeCount }}</span>
                 </button>
                 <button type="button" @click="currentFilter = 'ready'" :class="['bb-seg__btn', { 'is-on': currentFilter === 'ready' }]">
-                    <i class="bi bi-record-circle"></i>Kosong
+                    <i class="bi bi-record-circle"></i>
+                    <span>Kosong</span>
                     <span class="bb-seg__count">{{ readyCount }}</span>
                 </button>
             </div>
-            <div class="d-sm-none text-end">
-                <div class="fw-bold text-gradient fs-5">{{ currentTime }}</div>
-            </div>
-        </div>
-
-        <!-- Booking akan datang -->
-        <div v-if="upcomingBookings.length > 0" class="mb-3">
-            <div class="bb-card">
-                <div class="bb-card-header d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-calendar2-check-fill me-2" style="color: #06b6d4;"></i>
-                        Booking Akan Datang
-                    </h6>
-                    <span class="bb-badge" style="background: rgba(6,182,212,0.1); color: #06b6d4;">
-                        {{ upcomingBookings.length }} Booking
-                    </span>
-                </div>
-                <div class="bb-card-body p-0">
-                    <div class="table-responsive">
-                        <table class="bb-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-4">Jadwal</th>
-                                    <th>Meja</th>
-                                    <th>Pelanggan</th>
-                                    <th>Paket</th>
-                                    <th>Durasi</th>
-                                    <th class="text-end">Total</th>
-                                    <th class="text-end pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="booking in upcomingBookings" :key="booking.id">
-                                    <td class="ps-4 fw-bold">{{ formatBookingShort(booking.start_time) }}</td>
-                                    <td>{{ booking.table?.name || '-' }}</td>
-                                    <td>{{ booking.customer_name }}</td>
-                                    <td>{{ booking.package?.name || '-' }}</td>
-                                    <td>{{ calculateDuration(booking) }}</td>
-                                    <td class="text-end font-monospace">{{ formatRupiah(booking.total_cost) }}</td>
-                                    <td class="text-end pe-4">
-                                        <button
-                                            v-if="canStartBooking(booking)"
-                                            type="button"
-                                            class="bb-btn bb-btn--success py-1 px-3"
-                                            style="font-size: 0.8rem; text-transform: none;"
-                                            @click="startBooking(booking)"
-                                        >
-                                            <i class="bi bi-play-fill"></i> Mulai
-                                        </button>
-                                        <span v-else class="small text-secondary">
-                                            <i class="bi bi-hourglass-split me-1"></i>Menunggu
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="d-sm-none text-end ms-auto">
+                <div class="fw-bold text-gradient fs-5 font-monospace" style="line-height: 1;">{{ currentTime }}</div>
             </div>
         </div>
 
@@ -598,8 +600,8 @@ const getFilteredHistory = (transactions) => {
                     <div class="bb-meja-card__name">
                         {{ table.name }}
                         <i class="bi"
-                           :class="table.status === 'active' ? 'bi-lightbulb-fill' : 'bi-lightbulb'"
-                           :title="table.status === 'active' ? 'Lampu Menyala' : 'Lampu Mati'"
+                           :class="table.is_light_on ? 'bi-lightbulb-fill text-warning' : (table.status === 'active' ? 'bi-lightbulb-fill' : 'bi-lightbulb')"
+                           :title="table.is_light_on ? 'Lampu Menyala' : 'Lampu Mati'"
                         ></i>
                     </div>
                     <span class="bb-status-badge flex-shrink-0" :class="table.status === 'active' ? 'bb-status-badge--active' : 'bb-status-badge--ready'">
@@ -628,7 +630,13 @@ const getFilteredHistory = (transactions) => {
                         <template v-else>
                             <i class="bi bi-hourglass-split bb-meja-felt__icon"></i>
                             <span class="bb-meja-felt__label bb-meja-felt__label--idle">Tersedia</span>
-                            <span v-if="bookingByTable[table.id]" class="small" style="font-size: 0.68rem; color: #06b6d4;">
+                            <span
+                                v-if="bookingByTable[table.id]"
+                                class="bb-meja-booking-tag"
+                                role="button"
+                                title="Lihat detail booking"
+                                @click.stop="showBookingModal = true"
+                            >
                                 <i class="bi bi-calendar2-check"></i> {{ formatBookingShort(bookingByTable[table.id].start_time) }}
                             </span>
                         </template>
@@ -678,6 +686,100 @@ const getFilteredHistory = (transactions) => {
 
 
         <!-- ═══════════════════════════════════════════════════ -->
+        <!-- Upcoming Bookings Modal                             -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <div v-if="showBookingModal" class="bb-modal-backdrop" @click.self="showBookingModal = false">
+            <div class="bb-modal" style="max-width: 620px; width: 100%;">
+                <div class="bb-modal-header">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <div class="d-flex align-items-center justify-content-center rounded-3 p-2 flex-shrink-0" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                            <i class="bi bi-calendar2-check-fill fs-5"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h5 class="fw-bold mb-0 text-truncate">Booking Akan Datang</h5>
+                            <div class="small text-secondary" style="font-size: 0.75rem;">
+                                {{ upcomingBookings.length }} reservasi meja mendatang
+                            </div>
+                        </div>
+                    </div>
+                    <button @click="showBookingModal = false" class="bb-theme-toggle flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;" title="Tutup">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <div class="bb-modal-body p-3 p-sm-4" style="max-height: 72vh; overflow-y: auto;">
+                    <div v-if="upcomingBookings.length === 0" class="text-center py-5">
+                        <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3" style="background: rgba(6, 182, 212, 0.08); color: #06b6d4;">
+                            <i class="bi bi-calendar-check fs-2"></i>
+                        </div>
+                        <h6 class="fw-bold mb-1">Tidak Ada Booking Mendatang</h6>
+                        <p class="text-secondary small mb-0">Semua meja bebas dan siap digunakan langsung.</p>
+                    </div>
+
+                    <div v-else class="d-flex flex-column gap-3">
+                        <div
+                            v-for="booking in upcomingBookings"
+                            :key="booking.id"
+                            class="bb-booking-item p-3 rounded-3"
+                            :class="{ 'bb-booking-item--ready': canStartBooking(booking) }"
+                        >
+                            <!-- Row 1: Meja, Customer, Jadwal -->
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="badge rounded-pill px-2 py-1" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; font-weight: 700; font-size: 0.8rem;">
+                                        <i class="bi bi-circle-fill me-1" style="font-size: 0.45rem;"></i>{{ booking.table?.name || 'Meja' }}
+                                    </span>
+                                    <span class="fw-bold text-truncate" style="max-width: 170px;">
+                                        {{ booking.customer_name }}
+                                    </span>
+                                </div>
+                                <div class="badge bg-secondary-subtle text-secondary font-monospace fw-semibold px-2 py-1 flex-shrink-0" style="font-size: 0.75rem;">
+                                    <i class="bi bi-clock me-1 text-info"></i>{{ formatBookingFull(booking.start_time) }}
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Paket, Durasi & Total Cost -->
+                            <div class="d-flex justify-content-between align-items-center p-2 rounded-2 mb-3 bb-booking-subbar">
+                                <div class="small">
+                                    <span class="text-secondary">Paket:</span>
+                                    <span class="fw-semibold ms-1">{{ booking.package?.name || 'Reguler' }}</span>
+                                    <span class="text-secondary mx-1">·</span>
+                                    <span class="text-info fw-semibold">{{ calculateDuration(booking) }}</span>
+                                </div>
+                                <div class="text-end font-monospace fw-bold text-success" style="font-size: 0.9rem;">
+                                    {{ formatRupiah(booking.total_cost) }}
+                                </div>
+                            </div>
+
+                            <!-- Row 3: Action -->
+                            <div>
+                                <button
+                                    v-if="canStartBooking(booking)"
+                                    type="button"
+                                    class="bb-btn bb-btn--success w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-bold"
+                                    style="border-radius: 0.6rem; font-size: 0.85rem;"
+                                    @click="startBooking(booking)"
+                                >
+                                    <i class="bi bi-play-fill fs-5"></i> Mulai Sesi Sekarang
+                                </button>
+                                <div
+                                    v-else
+                                    class="d-flex align-items-center justify-content-between small px-3 py-2 rounded-2 text-secondary bb-booking-waiting"
+                                >
+                                    <span class="d-flex align-items-center gap-1">
+                                        <i class="bi bi-hourglass-split text-warning"></i>
+                                        <span>Menunggu Jadwal</span>
+                                    </span>
+                                    <span class="small opacity-75">Bisa mulai 30 mnt sebelumnya</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════ -->
         <!-- Table History Modal (NEW)                          -->
         <!-- ═══════════════════════════════════════════════════ -->
         <div v-if="showTableHistoryModal && selectedTableForHistory" class="bb-modal-backdrop">
@@ -697,12 +799,12 @@ const getFilteredHistory = (transactions) => {
 
                 <div class="bb-modal-body p-4" style="max-height: 65vh; overflow-y: auto;">
                     <!-- Active Session / Add New Session -->
-                    <div class="mb-4 p-3 rounded-4 d-flex justify-content-between align-items-center bb-card" 
+                    <div class="mb-4 p-3 rounded-4 d-flex justify-content-between align-items-center bb-card flex-wrap gap-2" 
                          :style="{
                              background: selectedTableForHistory.status === 'active' ? 'rgba(16,185,129,0.05)' : '',
                              border: selectedTableForHistory.status === 'active' ? '1px solid rgba(16,185,129,0.2)' : ''
                          }">
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2 gap-sm-3 flex-wrap">
                             <div class="fw-bold opacity-75">Status Meja:</div>
                             
                             <!-- Active Badge -->
@@ -722,10 +824,27 @@ const getFilteredHistory = (transactions) => {
                             </div>
                         </div>
                         
-                        <div v-if="selectedTableForHistory.status !== 'active'">
-                            <button @click="showTableHistoryModal = false; openOrderModal(selectedTableForHistory)" class="bb-btn bb-btn--primary bb-btn--sm px-4 rounded-pill fw-bold" style="box-shadow: 0 4px 12px rgba(99,102,241,0.25);">
-                                <i class="bi bi-play-fill me-1"></i> Mulai Sesi Baru
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <!-- Toggle Saklar Lampu Meja (Manual / Test) -->
+                            <button
+                                type="button"
+                                class="bb-btn d-flex align-items-center gap-2 py-1 px-3 rounded-pill"
+                                :class="selectedTableForHistory.is_light_on ? 'bb-btn--warning text-white fw-bold' : 'bb-btn--ghost border text-secondary'"
+                                :disabled="togglingLight"
+                                @click="toggleTableLight(selectedTableForHistory)"
+                                :title="selectedTableForHistory.is_light_on ? 'Matikan Lampu Meja' : 'Nyalakan Lampu Meja'"
+                                style="font-size: 0.82rem;"
+                            >
+                                <span v-if="togglingLight" class="spinner-border spinner-border-sm" role="status"></span>
+                                <i v-else class="bi" :class="selectedTableForHistory.is_light_on ? 'bi-lightbulb-fill' : 'bi-lightbulb'"></i>
+                                <span>{{ selectedTableForHistory.is_light_on ? 'Lampu: ON' : 'Lampu: OFF' }}</span>
                             </button>
+
+                            <div v-if="selectedTableForHistory.status !== 'active'">
+                                <button @click="showTableHistoryModal = false; openOrderModal(selectedTableForHistory)" class="bb-btn bb-btn--primary bb-btn--sm px-3 px-sm-4 rounded-pill fw-bold" style="box-shadow: 0 4px 12px rgba(99,102,241,0.25); font-size: 0.82rem;">
+                                    <i class="bi bi-play-fill me-1"></i> Mulai Sesi Baru
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -987,13 +1106,13 @@ const getFilteredHistory = (transactions) => {
             <div class="bb-modal" style="max-width: 1240px; width: 95%;">
                 <!-- Header: Table info + countdown -->
                 <div class="bb-modal-header">
-                    <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div>
-                            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                        <div class="min-w-0">
+                            <h5 class="fw-bold mb-0 d-flex align-items-center gap-2 text-truncate">
                                 <i class="bi bi-circle-fill" style="font-size: 0.5rem; color: #10b981;"></i>
                                 {{ selectedActiveTable.name }}
                             </h5>
-                            <div class="d-flex gap-3 mt-1 small text-secondary">
+                            <div class="d-flex gap-3 mt-1 small text-secondary flex-wrap">
                                 <span><i class="bi bi-person-fill me-1"></i>{{ activeTransaction?.customer_name }}</span>
                                 <span><i class="bi bi-box me-1"></i>{{ activeTransaction?.package?.name || '-' }}</span>
                                 <span class="fw-bold" style="color: #10b981;">
@@ -1002,9 +1121,25 @@ const getFilteredHistory = (transactions) => {
                             </div>
                         </div>
                     </div>
-                    <button @click="closeSessionModal" class="bb-theme-toggle" style="width: 32px; height: 32px; font-size: 0.9rem;">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <!-- Toggle Saklar Lampu Meja (Manual / Test) -->
+                        <button
+                            type="button"
+                            class="bb-btn d-flex align-items-center gap-2 py-1 px-3 rounded-pill"
+                            :class="selectedActiveTable.is_light_on ? 'bb-btn--warning text-white fw-bold' : 'bb-btn--ghost border text-secondary'"
+                            :disabled="togglingLight"
+                            @click="toggleTableLight(selectedActiveTable)"
+                            :title="selectedActiveTable.is_light_on ? 'Matikan Lampu Meja' : 'Nyalakan Lampu Meja'"
+                            style="font-size: 0.82rem;"
+                        >
+                            <span v-if="togglingLight" class="spinner-border spinner-border-sm" role="status"></span>
+                            <i v-else class="bi" :class="selectedActiveTable.is_light_on ? 'bi-lightbulb-fill' : 'bi-lightbulb'"></i>
+                            <span>{{ selectedActiveTable.is_light_on ? 'Lampu: ON' : 'Lampu: OFF' }}</span>
+                        </button>
+                        <button @click="closeSessionModal" class="bb-theme-toggle" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="d-flex gap-1 px-4 pt-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">

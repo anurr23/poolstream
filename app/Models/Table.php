@@ -12,6 +12,10 @@ class Table extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'is_light_on' => 'boolean',
+    ];
+
     public function transactions()
     {
         return $this->hasMany(Transaction::class);

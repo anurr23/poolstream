@@ -23,6 +23,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [TableController::class, 'index'])->name('dashboard');
         Route::post('/tables/{id}/start', [TableController::class, 'start'])->name('tables.start');
         Route::post('/tables/{id}/stop', [TableController::class, 'stop'])->name('tables.stop');
+        Route::post('/tables/{id}/toggle-light', [TableController::class, 'toggleLight'])->name('tables.toggle-light');
         Route::post('/tables/bookings/{transaction}/start', [TableController::class, 'startBooking'])->name('tables.start-booking');
         Route::put('/tables/{id}/transactions/{transaction}', [TableController::class, 'updateSession'])->name('tables.updateSession');
 

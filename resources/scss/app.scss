@@ -604,9 +604,36 @@ body {
     background: rgba(255,255,255,0.2);
 }
 @media (max-width: 575.98px) {
+    .bb-meja-toolbar {
+        flex-wrap: nowrap;
+        gap: 0.5rem;
+    }
+    .bb-seg {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 0.15rem;
+        padding: 0.2rem;
+        -webkit-overflow-scrolling: touch;
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
     .bb-seg__btn {
-        padding: 0.45rem 0.7rem;
+        padding: 0.35rem 0.55rem;
         font-size: 0.72rem;
+        gap: 0.25rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .bb-seg__count {
+        min-width: 1.15rem;
+        padding: 0.05rem 0.3rem;
+        font-size: 0.62rem;
+    }
+    .bb-meja-card {
+        flex: 1 1 100%;
+        max-width: 100%;
     }
 }
 
@@ -788,6 +815,24 @@ body {
     color: #fcd34d;
     background: rgba(245, 158, 11, 0.18);
     border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.bb-meja-booking-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #06b6d4;
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    padding: 0.15rem 0.55rem;
+    border-radius: 50rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    &:hover {
+        background: rgba(6, 182, 212, 0.22);
+        transform: scale(1.03);
+    }
 }
 
 // Meta sesi + tombol go
@@ -1124,6 +1169,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0.75rem;
     animation: fadeIn 0.2s ease;
 }
 .bb-modal {
@@ -1154,6 +1200,48 @@ body {
 }
 .bb-modal-body {
     padding: 1rem 1.75rem 1.75rem;
+}
+
+@media (max-width: 575.98px) {
+    .bb-modal {
+        margin: 0.5rem;
+        border-radius: 1.25rem;
+    }
+    .bb-modal-header {
+        padding: 1.1rem 1rem 0.5rem;
+    }
+    .bb-modal-body {
+        padding: 0.75rem 1rem 1rem;
+    }
+}
+
+.bb-booking-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+[data-bs-theme="light"] .bb-booking-item {
+    background: #f8fafc;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+}
+.bb-booking-item--ready {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+    background: rgba(16, 185, 129, 0.05);
+}
+[data-bs-theme="light"] .bb-booking-item--ready {
+    background: #f0fdf4;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+.bb-booking-subbar {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+[data-bs-theme="light"] .bb-booking-subbar {
+    background: rgba(0, 0, 0, 0.025);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.bb-booking-waiting {
+    background: rgba(148, 163, 184, 0.08);
 }
 
 .bb-history-item {
@@ -2076,6 +2164,27 @@ body {
     }
     .bb-page-content { padding: 0.75rem 1.25rem 1.25rem; }
     .bb-stat-card { padding: 1.25rem; }
+}
+
+@media (max-width: 575.98px) {
+    .bb-header {
+        margin: 0.5rem;
+        padding: 0 0.65rem;
+        gap: 0.4rem;
+        height: 60px;
+    }
+    .bb-theme-toggle {
+        width: 34px;
+        height: 34px;
+    }
+    .bb-header-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    .bb-header-profile {
+        padding: 0.2rem;
+    }
 }
 
 /* Tablet */

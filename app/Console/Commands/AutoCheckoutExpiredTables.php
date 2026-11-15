@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Transaction;
+use App\Services\RelayService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -37,12 +38,11 @@ class AutoCheckoutExpiredTables extends Command
             $transaction->status = 'completed';
             $transaction->save();
 
-            // Deactivate the table
+            // Deactivate the table and turn off light
             $table->status = 'inactive';
             $table->save();
 
-            // Turn off the relay
-            $this->controlRelay($table->relay_channel, 'off');
+            RelayService::setLight($table, false);
 
             $this->info("Auto-checkout: {$table->name} ({$transaction->customer_name})");
         }
@@ -62,12 +62,5 @@ class AutoCheckoutExpiredTables extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    private function controlRelay($channel, $state): void
-    {
-        $scriptPath = base_path('app/Services/relay_controller.py');
-        $command = escapeshellcmd("python \"$scriptPath\" $channel $state");
-        shell_exec($command);
     }
 }

@@ -31,10 +31,10 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
 
         <!-- Top Bar -->
         <header class="bb-header">
-            <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1 min-w-0">
                 <Link
                     :href="route('landing')"
-                    class="bb-btn bb-btn--ghost p-2"
+                    class="bb-btn bb-btn--ghost p-2 flex-shrink-0"
                     style="border-radius: 0.5rem;"
                     title="Kembali ke Menu Utama"
                 >
@@ -43,7 +43,7 @@ const userInitial = computed(() => userName.value.charAt(0).toUpperCase());
                 <slot name="header" />
             </div>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 gap-sm-3 flex-shrink-0">
                 <button @click="toggleTheme" class="bb-theme-toggle" title="Ganti tema">
                     <i :class="isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'"></i>
                 </button>

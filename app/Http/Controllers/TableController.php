@@ -6,6 +6,7 @@ use App\Models\FnbItem;
 use App\Models\Package;
 use App\Models\Table;
 use App\Models\Transaction;
+use App\Services\RelayService;
 use App\Services\TransactionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -149,8 +150,8 @@ class TableController extends Controller
                 TransactionService::recalculate($transaction);
             }
 
-            // Execute python script to turn ON relay
-            $this->controlRelay($table->relay_channel, 'on');
+            // Turn ON relay & update light state
+            RelayService::setLight($table, true);
         }
 
         return back();
@@ -270,7 +271,7 @@ class TableController extends Controller
         $transaction->status = 'active';
         $transaction->save();
 
-        $this->controlRelay($table->relay_channel, 'on');
+        RelayService::setLight($table, true);
 
         return back()->with('success', "Booking {$transaction->customer_name} berhasil dimulai.");
     }
@@ -295,23 +296,19 @@ class TableController extends Controller
                 TransactionService::recalculate($transaction);
             }
 
-            // Execute python script to turn OFF relay
-            $this->controlRelay($table->relay_channel, 'off');
+            // Turn OFF relay & update light state
+            RelayService::setLight($table, false);
         }
 
         return back();
     }
 
-    private function controlRelay($channel, $state)
+    public function toggleLight($id)
     {
-        $scriptPath = base_path('app/Services/relay_controller.py');
-        // Use 'py' instead of 'python' on Windows environments if python command is not recognized, or check if py exists
-        $pyCmd = 'py';
-        $channelArg = escapeshellarg($channel);
-        $stateArg = escapeshellarg($state);
-        $scriptPathArg = escapeshellarg($scriptPath);
+        $table = Table::findOrFail($id);
+        $isOn = RelayService::toggle($table);
 
-        $command = escapeshellcmd("$pyCmd $scriptPathArg $channelArg $stateArg");
-        shell_exec($command);
+        $stateText = $isOn ? 'dinyalakan' : 'dimatikan';
+        return back()->with('success', "Lampu {$table->name} berhasil {$stateText}.");
     }
 }

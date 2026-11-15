@@ -17,6 +17,10 @@ const props = defineProps({
     fnbItems: {
         type: Array,
         default: () => []
+    },
+    upcomingBookings: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -24,6 +28,38 @@ const props = defineProps({
 const formatRupiah = (val) => {
     const amount = Number(val) || 0;
     return 'Rp ' + amount.toLocaleString('id-ID');
+};
+
+const bookingByTable = computed(() => {
+    const map = {};
+    props.upcomingBookings.forEach((booking) => {
+        if (booking.table_id && !map[booking.table_id]) {
+            map[booking.table_id] = booking;
+        }
+    });
+    return map;
+});
+
+const formatBookingShort = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    const now = new Date();
+    const sameDay = date.toDateString() === now.toDateString();
+    return date.toLocaleString('id-ID', sameDay
+        ? { hour: '2-digit', minute: '2-digit' }
+        : { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
+
+const startBooking = (booking) => {
+    router.post(route('tables.start-booking', booking.id), {}, { preserveScroll: true });
+};
+
+const canStartBooking = (booking) => {
+    const now = new Date();
+    const start = new Date(booking.start_time);
+    const end = new Date(booking.expected_end_time);
+
+    return now >= new Date(start.getTime() - 30 * 60 * 1000) && now < end;
 };
 
 const packageOptions = computed(() => {
@@ -490,6 +526,62 @@ const getFilteredHistory = (transactions) => {
             </div>
         </div>
 
+        <!-- Booking akan datang -->
+        <div v-if="upcomingBookings.length > 0" class="mb-3">
+            <div class="bb-card">
+                <div class="bb-card-header d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-calendar2-check-fill me-2" style="color: #06b6d4;"></i>
+                        Booking Akan Datang
+                    </h6>
+                    <span class="bb-badge" style="background: rgba(6,182,212,0.1); color: #06b6d4;">
+                        {{ upcomingBookings.length }} Booking
+                    </span>
+                </div>
+                <div class="bb-card-body p-0">
+                    <div class="table-responsive">
+                        <table class="bb-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Jadwal</th>
+                                    <th>Meja</th>
+                                    <th>Pelanggan</th>
+                                    <th>Paket</th>
+                                    <th>Durasi</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end pe-4">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="booking in upcomingBookings" :key="booking.id">
+                                    <td class="ps-4 fw-bold">{{ formatBookingShort(booking.start_time) }}</td>
+                                    <td>{{ booking.table?.name || '-' }}</td>
+                                    <td>{{ booking.customer_name }}</td>
+                                    <td>{{ booking.package?.name || '-' }}</td>
+                                    <td>{{ calculateDuration(booking) }}</td>
+                                    <td class="text-end font-monospace">{{ formatRupiah(booking.total_cost) }}</td>
+                                    <td class="text-end pe-4">
+                                        <button
+                                            v-if="canStartBooking(booking)"
+                                            type="button"
+                                            class="bb-btn bb-btn--success py-1 px-3"
+                                            style="font-size: 0.8rem; text-transform: none;"
+                                            @click="startBooking(booking)"
+                                        >
+                                            <i class="bi bi-play-fill"></i> Mulai
+                                        </button>
+                                        <span v-else class="small text-secondary">
+                                            <i class="bi bi-hourglass-split me-1"></i>Menunggu
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Grid meja: kartu selalu center, meja sedikit tidak menempel kiri -->
         <div class="bb-meja-grid">
             <div
@@ -536,6 +628,9 @@ const getFilteredHistory = (transactions) => {
                         <template v-else>
                             <i class="bi bi-hourglass-split bb-meja-felt__icon"></i>
                             <span class="bb-meja-felt__label bb-meja-felt__label--idle">Tersedia</span>
+                            <span v-if="bookingByTable[table.id]" class="small" style="font-size: 0.68rem; color: #06b6d4;">
+                                <i class="bi bi-calendar2-check"></i> {{ formatBookingShort(bookingByTable[table.id].start_time) }}
+                            </span>
                         </template>
                     </div>
                 </div>

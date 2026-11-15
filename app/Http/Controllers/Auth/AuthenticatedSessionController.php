@@ -33,6 +33,23 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = Auth::user();
+
+        if ($user->isCustomer() && ! $user->hasVerifiedEmail()) {
+            return redirect()->route('customer.verification.notice');
+        }
+
+        if ($user->role === 'customer') {
+            $intended = $request->session()->pull('url.intended');
+            $path = $intended ? parse_url($intended, PHP_URL_PATH) : null;
+
+            if ($path && str_starts_with($path, '/customer')) {
+                return redirect()->to($intended);
+            }
+
+            return redirect()->route('customer.home');
+        }
+
         return redirect()->intended(route('landing'));
     }
 

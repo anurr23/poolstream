@@ -21,7 +21,7 @@ Repository: <https://github.com/anurr23/poolstream>
 - 💡 **Relay control** — Python bridge (`app/Services/relay_controller.py`) to switch table lights on/off with a session. The current implementation is a placeholder for USB HID hardware.
 - 💳 **Checkout and receipts** — combined billiard and F&amp;B totals, printable 80 mm thermal receipts via the browser.
 - 🌓 **Theming** — light and dark modes using Bootstrap 5 and custom SCSS (`bb-` prefix).
-- 🛡️ **Role-based access** — `admin` (full access) and `kasir` (cashier dashboard).
+- 🛡️ **Role-based access** - `admin` (full access), `kasir` (cashier dashboard), and `customer` (online table booking).
 - 📊 **Reports** — F&amp;B sales, table transactions, revenue, and analytics charts.
 - 📱 **Responsive layout** — overlay sidebar on desktop, tablet, and mobile.
 
@@ -67,12 +67,23 @@ Open <http://localhost:8000>. Login uses **username**, not email.
 
 Seeded accounts:
 
-| Role | Username | Password |
-| --- | --- | --- |
-| Admin | `admin` | `password` |
-| Cashier | `kasir` | `password` |
+| Role | Username | Email | Password |
+| --- | --- | --- | --- |
+| Admin | `admin` | `admin@poolstream.test` | `password` |
+| Cashier | `kasir` | `kasir@poolstream.test` | `password` |
+| Customer | `customer` | `customer@poolstream.test` | `password` |
 
 > Change these credentials before deploying to production.
+
+## Customer registration (OTP + Google)
+
+Customers can register themselves from `/register`. A 6-digit OTP is emailed and must be verified before booking.
+
+- Default mailer is `log`, so the OTP is written to `storage/logs/laravel.log`.
+- To send real email, set SMTP values in `.env` (Gmail App Password, Brevo, Resend, etc.).
+- Optional Google sign-in uses `laravel/socialite`. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and register this redirect URI in Google Cloud Console:
+  `http://localhost/poolstream/public/auth/google/callback`
+- The Google button only appears when both credentials are filled.
 
 ## ⚙️ Manual setup
 
@@ -264,7 +275,7 @@ Full rules and the pull-request checklist are in [CONTRIBUTING.md](CONTRIBUTING.
 | CSS/JS 404 after build | `vite.config.js` uses `base: '/poolstream/public/build/'`. Serve the app under that subpath, or change `base` to `/build/` for a domain-root deployment. |
 | `Database file does not exist` | `touch database/database.sqlite` or point `DB_DATABASE` to an existing database. |
 | `419 Page Expired` | Clear config and confirm the `sessions` table exists: `php artisan config:clear && php artisan migrate`. |
-| Login fails | Use the **username** (`admin` / `kasir`), not an email. Re-run `php artisan db:seed` if the accounts are missing. |
+| Login fails | Use the **username** (`admin` / `kasir` / `customer`) or seeded email, not an unregistered address. Re-run `php artisan db:seed` if the accounts are missing. |
 | Relay does not switch | The Python bridge is a dummy. Install `hidapi` and replace the placeholder implementation. |
 | Scheduled checkout does not run | Start `php artisan schedule:work` in development, or configure the production cron entry. |
 | Permission denied on storage | `chmod -R ug+rwx storage bootstrap/cache` and re-run `php artisan storage:link`. |

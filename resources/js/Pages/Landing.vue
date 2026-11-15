@@ -81,39 +81,58 @@ const stripedBalls = balls.filter((b) => b.stripe);
 
 // Kartu menuju modul tujuan. Belum login? Route tujuan dilindungi middleware
 // 'auth', jadi server mengarahkan ke halaman login (intended url tersimpan).
-const menus = computed(() => [
-    {
-        key: 'admin',
-        title: 'Admin',
-        illustration: 'admin',
-        tag: 'Data, laporan, user',
-        accent: '#8b5cf6',
-        accent2: '#6d28d9',
-        rgb: '139, 92, 246',
-        href: route('admin.index'),
-        adminOnly: true,
-    },
-    {
-        key: 'kasir_meja',
-        title: 'Kasir Meja',
-        illustration: 'meja',
-        tag: 'Sesi meja & timer',
-        accent: '#10b981',
-        accent2: '#059669',
-        rgb: '16, 185, 129',
-        href: route('dashboard'),
-    },
-    {
-        key: 'kasir',
-        title: 'Kasir F&B',
-        illustration: 'fnb',
-        tag: 'Pesanan F&B',
-        accent: '#f59e0b',
-        accent2: '#d97706',
-        rgb: '245, 158, 11',
-        href: route('fnb-orders.index'),
-    },
-].filter((menu) => !menu.adminOnly || !isAuth.value || isAdmin.value));
+const menus = computed(() => {
+    const items = [
+        {
+            key: 'customer_booking',
+            title: 'Customer',
+            illustration: 'customer',
+            tag: 'Booking online',
+            accent: '#06b6d4',
+            accent2: '#0891b2',
+            rgb: '6, 182, 212',
+            href: route('customer.home'),
+            customerOnly: true,
+        },
+        {
+            key: 'admin',
+            title: 'Admin',
+            illustration: 'admin',
+            tag: 'Data, laporan, user',
+            accent: '#8b5cf6',
+            accent2: '#6d28d9',
+            rgb: '139, 92, 246',
+            href: route('admin.index'),
+            adminOnly: true,
+        },
+        {
+            key: 'kasir_meja',
+            title: 'Kasir Meja',
+            illustration: 'meja',
+            tag: 'Sesi meja & timer',
+            accent: '#10b981',
+            accent2: '#059669',
+            rgb: '16, 185, 129',
+            href: route('dashboard'),
+        },
+        {
+            key: 'kasir',
+            title: 'Kasir F&B',
+            illustration: 'fnb',
+            tag: 'Pesanan F&B',
+            accent: '#f59e0b',
+            accent2: '#d97706',
+            rgb: '245, 158, 11',
+            href: route('fnb-orders.index'),
+        },
+    ];
+
+    if (user.value?.role === 'customer') {
+        return items.filter((menu) => menu.customerOnly);
+    }
+
+    return items.filter((menu) => !menu.adminOnly || !isAuth.value || isAdmin.value);
+});
 </script>
 
 <template>
@@ -236,7 +255,7 @@ const menus = computed(() => [
 
             <!-- Module Cards -->
             <div class="row g-4">
-                <div v-for="(menu, i) in menus" :key="menu.key" class="col-12 col-md-6 col-lg-4">
+                <div v-for="(menu, i) in menus" :key="menu.key" class="col-12 col-sm-6 col-lg-3">
                     <Link
                         :href="menu.href"
                         class="bb-mod-card"

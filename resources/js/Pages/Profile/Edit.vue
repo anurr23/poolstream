@@ -1,18 +1,25 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import KasirLayout from '@/Layouts/KasirLayout.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 
 const user = usePage().props.auth.user;
+const isCustomer = computed(() => user.role === 'customer');
+const layoutComponent = computed(() => (isCustomer.value ? CustomerLayout : KasirLayout));
 
 const initial = user.name.charAt(0).toUpperCase();
 
-const roleMeta = computed(() =>
-    user.role === 'admin'
-        ? { label: 'Administrator', icon: 'bi-shield-lock-fill', cls: 'bb-profil-chip--admin' }
-        : { label: 'Kasir', icon: 'bi-person-fill', cls: 'bb-profil-chip--kasir' },
-);
+const roleMeta = computed(() => {
+    if (user.role === 'admin') {
+        return { label: 'Administrator', icon: 'bi-shield-lock-fill', cls: 'bb-profil-chip--admin' };
+    }
+    if (user.role === 'customer') {
+        return { label: 'Customer', icon: 'bi-person-badge-fill', cls: 'bb-profil-chip--customer' };
+    }
+    return { label: 'Kasir', icon: 'bi-person-fill', cls: 'bb-profil-chip--kasir' };
+});
 
 const joinedAt = computed(() => {
     if (!user.created_at) return null;
@@ -63,8 +70,11 @@ const submit = () => {
 <template>
     <Head title="Profil Saya" />
 
-    <KasirLayout>
-        <template #header>
+    <component
+        :is="layoutComponent"
+        :back-href="isCustomer ? route('customer.home') : null"
+    >
+        <template #header v-if="!isCustomer">
             <h1 class="bb-header-title"><i class="bi bi-person-circle me-2" style="color: #6366f1;"></i>Profil Saya</h1>
         </template>
 
@@ -216,5 +226,5 @@ const submit = () => {
                 </div>
             </div>
         </div>
-    </KasirLayout>
+    </component>
 </template>

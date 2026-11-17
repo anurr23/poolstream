@@ -41,6 +41,7 @@ class AiEvaluationService
 
         [$system, $user] = $this->prompts($payload);
 
+        // Laravel's HTTP client defaults to 30s; 0 means "no timeout" in Guzzle.
         $response = Http::withToken((string) config('services.ai.api_key'))
             ->acceptJson()
             ->timeout((int) config('services.ai.timeout'))

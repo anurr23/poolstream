@@ -46,7 +46,7 @@ return [
         'base_url' => env('AI_BASE_URL', 'http://127.0.0.1:20128/v1'),
         'api_key' => env('AI_API_KEY'),
         'model' => env('AI_MODEL', 'ag/gemini-3.8-flash-high'),
-        'timeout' => (int) env('AI_TIMEOUT', 180),
+        'timeout' => (int) env('AI_TIMEOUT', 0),
     ],
 
 ];

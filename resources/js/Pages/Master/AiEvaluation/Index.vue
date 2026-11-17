@@ -161,20 +161,12 @@ const formatDateShort = (value) => {
                         </div>
 
                         <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
-                            <button class="bb-btn bb-btn--primary" :disabled="form.processing || !form.sections.length" @click="submit">
-                                <i class="bi bi-stars me-2"></i>
-                                {{ form.processing ? 'AI sedang menganalisa…' : 'Buat Evaluasi' }}
+                            <button class="bb-btn bb-btn--primary" :disabled="!form.sections.length" @click="submit">
+                                <i class="bi bi-stars me-2"></i>Buat Evaluasi
                             </button>
                             <span class="small text-secondary">
-                                <i class="bi bi-clock-history me-1"></i>Proses biasanya 10–60 detik.
+                                <i class="bi bi-info-circle me-1"></i>Analisa berjalan di latar belakang, halaman tetap bisa dipakai.
                             </span>
-                        </div>
-
-                        <div v-if="form.processing" class="bb-ai-progress mt-3">
-                            <div class="bb-ai-progress__bar"></div>
-                            <div class="small text-secondary mt-2">
-                                Menghitung agregat lalu mengirim ke AI. Jangan tutup halaman ini.
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -320,23 +312,6 @@ const formatDateShort = (value) => {
 
 .bb-ai-section input {
     flex-shrink: 0;
-}
-
-.bb-ai-progress__bar {
-    height: 6px;
-    border-radius: 100px;
-    background: linear-gradient(90deg, #8b5cf6, #06b6d4, #8b5cf6);
-    background-size: 200% 100%;
-    animation: bb-ai-slide 1.4s linear infinite;
-}
-
-@keyframes bb-ai-slide {
-    0% {
-        background-position: 0% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
 }
 
 .bb-ai-empty {

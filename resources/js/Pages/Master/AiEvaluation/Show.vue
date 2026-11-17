@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
     evaluation: { type: Object, required: true },
@@ -67,6 +67,36 @@ const durationLabel = computed(() => {
 });
 
 const ringkasanData = computed(() => meta.value.ringkasan_data || null);
+
+// Polling ringan selama AI memproses, tanpa memblokir halaman.
+let pollTimer = null;
+
+const stopPolling = () => {
+    if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+    }
+};
+
+const startPolling = () => {
+    stopPolling();
+
+    if (props.evaluation.status !== 'running') return;
+
+    pollTimer = setInterval(() => {
+        router.reload({ only: ['evaluation'], preserveScroll: true, preserveState: true });
+    }, 3000);
+};
+
+onMounted(startPolling);
+onUnmounted(stopPolling);
+
+watch(
+    () => props.evaluation.status,
+    (status) => {
+        if (status !== 'running') stopPolling();
+    }
+);
 </script>
 
 <template>
@@ -96,6 +126,16 @@ const ringkasanData = computed(() => meta.value.ringkasan_data || null);
                 <Link :href="route('ai-evaluations.index')" class="bb-btn bb-btn--primary bb-btn--sm">
                     <i class="bi bi-plus-lg"></i> Evaluasi Baru
                 </Link>
+            </div>
+        </div>
+
+        <div v-if="evaluation.status === 'running'" class="bb-ai-running mb-3">
+            <span class="bb-ai-running__spinner"></span>
+            <div>
+                <div class="fw-bold" style="font-size: 0.9rem;">AI sedang menganalisa…</div>
+                <div class="small text-secondary">
+                    Data periode sudah dikirim ke {{ evaluation.model || 'model lokal' }}. Halaman ini akan memperbarui sendiri saat selesai — kamu bisa lanjut membuka menu lain.
+                </div>
             </div>
         </div>
 
@@ -237,6 +277,32 @@ const ringkasanData = computed(() => meta.value.ringkasan_data || null);
 </template>
 
 <style scoped>
+.bb-ai-running {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1rem;
+    border-radius: 0.9rem;
+    border: 1px dashed rgba(139, 92, 246, 0.45);
+    background: rgba(139, 92, 246, 0.08);
+}
+
+.bb-ai-running__spinner {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 3px solid rgba(139, 92, 246, 0.25);
+    border-top-color: #8b5cf6;
+    animation: bb-ai-spin 0.8s linear infinite;
+}
+
+@keyframes bb-ai-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .bb-ai-chip {
     display: inline-flex;
     align-items: center;

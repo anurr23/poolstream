@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateAiEvaluation;
 use App\Models\AiEvaluation;
 use App\Models\Transaction;
-use App\Services\AiEvaluationService;
 use App\Services\ReportDataService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class AiEvaluationController extends Controller
         ]);
     }
 
-    public function store(Request $request, AiEvaluationService $service)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'preset' => ['required', 'string', 'in:'.implode(',', array_keys(self::PRESETS))],
@@ -81,17 +81,8 @@ class AiEvaluationController extends Controller
             ],
         ]);
 
-        // Panggilan AI bisa memakan puluhan detik; jangan biarkan PHP memutus proses.
-        @set_time_limit(0);
-
-        try {
-            $service->generate($evaluation);
-        } catch (\Throwable $e) {
-            $evaluation->forceFill([
-                'status' => 'failed',
-                'error' => mb_substr($e->getMessage(), 0, 900),
-            ])->save();
-        }
+        // Analisa dijalankan setelah response dikirim, jadi UI tidak terblokir.
+        GenerateAiEvaluation::dispatchAfterResponse($evaluation->id);
 
         return redirect()->route('ai-evaluations.show', $evaluation);
     }

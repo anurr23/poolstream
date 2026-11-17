@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -9,7 +9,6 @@ const props = defineProps({
     sections: { type: Array, default: () => [] },
     defaultSections: { type: Array, default: () => [] },
     history: { type: Array, default: () => [] },
-    model: { type: String, default: '' },
     today: { type: String, default: '' },
 });
 
@@ -88,8 +87,8 @@ const formatDateShort = (value) => {
                     Pilih periode, centang data yang ingin dievaluasi, lalu biarkan AI menyusun temuan dan rekomendasi.
                 </p>
                 <div class="bb-ai-hero__meta">
-                    <span><i class="bi bi-cpu"></i> {{ model || 'model lokal' }}</span>
-                    <span><i class="bi bi-database-check"></i> Data agregat, bukan data mentah</span>
+                    <span><i class="bi bi-shield-lock"></i> Analisa internal, data agregat</span>
+                    <span><i class="bi bi-graph-up-arrow"></i> Temuan, rekomendasi, dan kesimpulan</span>
                 </div>
             </div>
         </div>
@@ -196,7 +195,7 @@ const formatDateShort = (value) => {
                             >
                                 <div style="min-width: 0;">
                                     <div class="bb-ai-history__period">
-                                        {{ formatDateShort(item.start_date) }} — {{ formatDateShort(item.end_date) }}
+                                        {{ formatDateShort(item.start_date) }} â€” {{ formatDateShort(item.end_date) }}
                                     </div>
                                     <div class="bb-ai-history__meta">
                                         dibuat {{ formatDateShort(item.created_at) }}

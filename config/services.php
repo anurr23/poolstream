@@ -47,6 +47,7 @@ return [
         'api_key' => env('AI_API_KEY'),
         'model' => env('AI_MODEL', 'ag/gemini-3.8-flash-high'),
         'timeout' => (int) env('AI_TIMEOUT', 0),
+        'max_tokens' => (int) env('AI_MAX_TOKENS', 16384),
     ],
 
 ];

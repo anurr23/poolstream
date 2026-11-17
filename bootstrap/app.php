@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('tables:auto-checkout')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        // Percaya header proxy (X-Forwarded-*) agar scheme/host benar di balik
+        // reverse proxy atau tunnel seperti Cloudflare Tunnel.
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             EnsureUserIsActive::class,

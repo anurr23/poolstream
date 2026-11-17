@@ -75,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/master/ai-evaluations', [AiEvaluationController::class, 'index'])->name('ai-evaluations.index');
         Route::post('/master/ai-evaluations', [AiEvaluationController::class, 'store'])->name('ai-evaluations.store');
         Route::get('/master/ai-evaluations/{evaluation}', [AiEvaluationController::class, 'show'])->name('ai-evaluations.show');
+        Route::get('/master/ai-evaluations/{evaluation}/pdf', [AiEvaluationController::class, 'pdf'])->name('ai-evaluations.pdf');
         Route::delete('/master/ai-evaluations/{evaluation}', [AiEvaluationController::class, 'destroy'])->name('ai-evaluations.destroy');
     });
 });

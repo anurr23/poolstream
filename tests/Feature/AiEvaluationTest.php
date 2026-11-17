@@ -107,8 +107,31 @@ class AiEvaluationTest extends TestCase
         Http::assertSent(function ($request) {
             return str_ends_with($request->url(), '/chat/completions')
                 && ($request['model'] ?? null) === config('services.ai.model')
+                && ($request['max_tokens'] ?? null) === (int) config('services.ai.max_tokens')
                 && str_contains($request['messages'][1]['content'], '"ringkasan"');
         });
+    }
+
+    public function test_evaluation_fails_when_ai_output_hits_the_token_limit(): void
+    {
+        Http::fake([
+            '*/chat/completions' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => '{"ringkasan": "jawaban terpotong'], 'finish_reason' => 'length'],
+                ],
+                'usage' => ['prompt_tokens' => 100, 'completion_tokens' => 16384],
+            ]),
+        ]);
+
+        $this->actingAs($this->admin())->post(route('ai-evaluations.store'), [
+            'preset' => 'today',
+            'sections' => ['ringkasan'],
+        ]);
+
+        $evaluation = AiEvaluation::firstOrFail();
+
+        $this->assertSame('failed', $evaluation->status);
+        $this->assertStringContainsString('terpotong', (string) $evaluation->error);
     }
 
     public function test_evaluation_is_marked_failed_when_ai_returns_an_error(): void
@@ -154,5 +177,113 @@ class AiEvaluationTest extends TestCase
             ->assertRedirect(route('ai-evaluations.index'));
 
         $this->assertSame(0, AiEvaluation::count());
+    }
+
+    private function completedEvaluation(): AiEvaluation
+    {
+        return AiEvaluation::create([
+            'start_date' => now()->subDays(6)->toDateString(),
+            'end_date' => now()->toDateString(),
+            'bucket' => 'day',
+            'sections' => ['ringkasan', 'pendapatan', 'meja', 'fnb'],
+            'status' => 'completed',
+            'model' => 'ag/gemini-3.8-flash-high',
+            'result' => [
+                'ringkasan' => 'Pendapatan stabil dengan kontribusi F&B yang masih rendah.',
+                'metrik_kunci' => [
+                    ['label' => 'Revenue', 'nilai' => 'Rp 155.000', 'tren' => 'naik', 'catatan' => 'periode singkat'],
+                ],
+                'temuan' => [
+                    ['judul' => 'F&B nihil', 'detail' => 'Tidak ada penjualan F&B.', 'dampak' => 'tinggi', 'bukti' => '0 transaksi'],
+                ],
+                'rekomendasi' => [
+                    ['aksi' => 'Bundling minuman', 'alasan' => 'Menaikkan attach rate.', 'prioritas' => 1],
+                ],
+                'risiko' => [
+                    ['risiko' => 'Data sedikit', 'indikasi' => 'Hanya 2 transaksi'],
+                ],
+            ],
+            'payload' => [
+                'periode' => ['mulai' => now()->subDays(6)->toDateString(), 'selesai' => now()->toDateString()],
+                'ringkasan' => [
+                    'total_transaksi' => 2,
+                    'revenue_biliar' => 155000,
+                    'revenue_fnb' => 0,
+                    'revenue_total' => 155000,
+                    'rata_rata_nilai_transaksi' => 77500,
+                    'rata_rata_durasi_menit' => 120,
+                ],
+                'pendapatan' => [
+                    'bucket' => 'day',
+                    'deret' => [
+                        ['label' => now()->subDay()->toDateString(), 'transaksi' => 1, 'revenue_total' => 75000],
+                        ['label' => now()->toDateString(), 'transaksi' => 1, 'revenue_total' => 80000],
+                    ],
+                ],
+                'meja' => [
+                    'data' => [
+                        ['meja' => 'Meja 1', 'transaksi' => 2, 'total_jam_pakai' => 4, 'estimasi_utilisasi_persen' => 4.8, 'revenue' => 155000],
+                    ],
+                ],
+                'fnb' => [
+                    'data' => [
+                        ['item' => 'Teh Botol', 'kategori' => 'Minuman', 'qty' => 3, 'revenue' => 15000, 'kontribusi_persen' => 100],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    public function test_admin_can_open_the_evaluation_result_page(): void
+    {
+        $evaluation = $this->completedEvaluation();
+
+        $this->actingAs($this->admin())
+            ->get(route('ai-evaluations.show', $evaluation))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Master/AiEvaluation/Show')
+                ->where('evaluation.id', $evaluation->id)
+                ->where('evaluation.status', 'completed'));
+    }
+
+    public function test_admin_can_download_the_pdf_report(): void
+    {
+        $evaluation = $this->completedEvaluation();
+
+        $response = $this->actingAs($this->admin())
+            ->get(route('ai-evaluations.pdf', $evaluation));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+
+        $content = (string) $response->getContent();
+
+        $this->assertStringStartsWith('%PDF', $content);
+        $this->assertGreaterThan(5000, strlen($content));
+    }
+
+    public function test_non_admin_cannot_download_the_pdf_report(): void
+    {
+        $evaluation = $this->completedEvaluation();
+
+        $this->actingAs(User::factory()->create(['role' => 'kasir']))
+            ->get(route('ai-evaluations.pdf', $evaluation))
+            ->assertForbidden();
+    }
+
+    public function test_pdf_is_not_generated_while_evaluation_is_still_running(): void
+    {
+        $evaluation = AiEvaluation::create([
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'bucket' => 'day',
+            'sections' => ['ringkasan'],
+            'status' => 'running',
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('ai-evaluations.pdf', $evaluation))
+            ->assertRedirect(route('ai-evaluations.show', $evaluation));
     }
 }

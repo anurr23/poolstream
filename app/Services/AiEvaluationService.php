@@ -47,7 +47,8 @@ class AiEvaluationService
             ->timeout((int) config('services.ai.timeout'))
             ->post(rtrim((string) config('services.ai.base_url'), '/').'/chat/completions', [
                 'model' => config('services.ai.model'),
-                'temperature' => 0.3,
+                'temperature' => 0.4,
+                'max_tokens' => (int) config('services.ai.max_tokens'),
                 // 9router membalas dalam format SSE bila flag ini tidak dikirim eksplisit.
                 'stream' => false,
                 'messages' => [
@@ -69,6 +70,14 @@ class AiEvaluationService
             throw new RuntimeException('AI mengembalikan respons kosong.');
         }
 
+        if ($this->wasTruncated($response->json(), $response->body())) {
+            throw new RuntimeException(
+                'Jawaban AI terpotong karena mencapai batas '
+                .number_format((int) config('services.ai.max_tokens')).' token output. '
+                .'Naikkan AI_MAX_TOKENS atau kurangi jumlah seksi/periode yang dianalisa.'
+            );
+        }
+
         $result = $this->decode($content);
         $usage = $this->extractUsage($response->json(), $response->body());
 
@@ -82,6 +91,18 @@ class AiEvaluationService
             'completion_tokens' => $usage['completion_tokens'],
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
         ])->save();
+    }
+
+    /**
+     * Deteksi jawaban yang terpotong karena batas token (finish_reason = length).
+     */
+    private function wasTruncated(?array $json, string $body): bool
+    {
+        if (data_get($json, 'choices.0.finish_reason') === 'length') {
+            return true;
+        }
+
+        return (bool) preg_match('/"finish_reason"\s*:\s*"length"/', $body);
     }
 
     /**
@@ -163,30 +184,41 @@ class AiEvaluationService
     private function prompts(array $payload): array
     {
         $system = <<<'PROMPT'
-Anda adalah analis bisnis untuk pool hall / biliar bernama PoolStream.
+Anda adalah analis bisnis senior untuk pool hall / biliar "PoolStream".
 
-Tugas: mengevaluasi performa usaha berdasarkan DATA AGREGAT yang diberikan, dalam Bahasa Indonesia.
+Tugas: memberi evaluasi MENYELURUH dan MENDALAM atas performa usaha berdasarkan DATA AGREGAT yang diberikan, dalam Bahasa Indonesia yang jelas, tajam, dan actionable.
 
 Aturan wajib:
 1. Gunakan HANYA angka yang ada pada data. Jangan mengarang, jangan menebak, jangan menghitung ulang total yang sudah tersedia.
-2. Jika data tidak cukup untuk sebuah kesimpulan, tulis "data belum cukup".
-3. Nominal dalam Rupiah (IDR), tulis tanpa desimal.
-4. Fokus pada temuan yang bisa ditindaklanjuti pemilik usaha (operasional, harga, jam ramai, menu, utilisasi meja).
-5. Jawab HANYA dengan satu objek JSON valid, tanpa markdown, tanpa penjelasan di luar JSON.
+2. Sebut angka konkret (revenue, jumlah transaksi, jam, persentase) di hampir setiap bagian agar analisa terasa berbasis data.
+3. Jika data tidak cukup untuk sebuah kesimpulan, tulis "data belum cukup" dan jelaskan data apa yang perlu dikumpulkan.
+4. Nominal dalam Rupiah (IDR), tanpa desimal. Gunakan format seperti "IDR 155.000".
+5. Fokus pada hal yang bisa ditindaklanjuti pemilik usaha: operasional, harga, jam ramai, menu, utilisasi meja, strategi promosi.
+6. Bersikaplah analitis: jelaskan sebab-akibat, bukan sekadar mengulang angka.
+7. Panjang jawaban mengikuti kebutuhan analisa. Tidak ada batas kalimat: tulis sedetail dan selengkap yang datanya memungkinkan.
+8. Jawab HANYA dengan satu objek JSON valid, tanpa markdown, tanpa penjelasan di luar JSON.
 
 Skema JSON yang wajib diikuti:
 {
-  "ringkasan": "2-3 kalimat tentang kondisi bisnis pada periode ini",
-  "metrik_kunci": [{"label": "string", "nilai": "string", "tren": "naik|turun|stabil", "catatan": "string"}],
-  "temuan": [{"judul": "string", "detail": "string", "dampak": "tinggi|sedang|rendah", "bukti": "angka pendukung dari data"}],
-  "rekomendasi": [{"aksi": "string", "alasan": "string", "prioritas": 1}],
-  "risiko": [{"risiko": "string", "indikasi": "string"}]
+  "ringkasan": "ringkasan kondisi bisnis periode ini: angka kunci dan nada umum performa",
+  "metrik_kunci": [{"label": "string", "nilai": "string", "tren": "naik|turun|stabil", "catatan": "1 kalimat konteks"}],
+  "analisis": [
+    {"aspek": "Pendapatan|Utilisasi Meja|F&B|Operasional|Pelanggan|Efisiensi", "paragraf": "analisa mendalam untuk aspek ini, dengan angka pendukung"}
+  ],
+  "temuan": [
+    {"judul": "string", "detail": "penjelasan lengkap", "dampak": "tinggi|sedang|rendah", "bukti": "angka pendukung dari data", "implikasi": "dampak bisnisnya"}
+  ],
+  "rekomendasi": [
+    {"aksi": "string", "alasan": "string", "langkah": ["langkah konkret 1", "langkah konkret 2"], "dampak_diharapkan": "string", "prioritas": 1}
+  ],
+  "risiko": [{"risiko": "string", "indikasi": "string", "mitigasi": "string"}],
+  "kesimpulan": "penutup: prioritas utama yang perlu dieksekusi"
 }
 PROMPT;
 
         $user = "Berikut data agregat periode usaha yang harus dievaluasi (JSON):\n\n"
             .json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-            ."\n\nBuat evaluasi sesuai skema JSON yang diminta.";
+            ."\n\nBuat evaluasi mendalam sesuai skema JSON yang diminta. Tulis analisa selengkap mungkin sesuai data yang tersedia.";
 
         return [$system, $user];
     }

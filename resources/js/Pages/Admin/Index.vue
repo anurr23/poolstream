@@ -79,6 +79,13 @@ const reportMenus = [
         rgb: '139, 92, 246',
     },
 ];
+
+const aiMenu = {
+    title: 'Evaluasi AI',
+    desc: 'Kirim rekap laporan ke AI lokal, dapatkan temuan & rekomendasi otomatis',
+    href: route('ai-evaluations.index'),
+    icon: 'bi-stars',
+};
 </script>
 
 <template>
@@ -97,6 +104,24 @@ const reportMenus = [
                 <i class="bi bi-arrow-left"></i> Kembali ke Menu Utama
             </Link>
         </div>
+
+        <!-- AI Insight (fitur andalan) -->
+        <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-stars" style="color: #a855f7;"></i>AI Insight
+        </h6>
+        <Link :href="aiMenu.href" class="bb-ai-banner mb-4">
+            <div class="bb-ai-banner__orb"></div>
+            <div class="bb-ai-banner__body">
+                <span class="bb-ai-banner__badge"><i class="bi bi-stars"></i> Fitur Andalan</span>
+                <div class="bb-ai-banner__title">
+                    <i class="bi" :class="aiMenu.icon"></i> {{ aiMenu.title }}
+                </div>
+                <div class="bb-ai-banner__desc">{{ aiMenu.desc }}</div>
+                <span class="bb-ai-banner__cta">
+                    Buka Evaluasi AI <i class="bi bi-arrow-right"></i>
+                </span>
+            </div>
+        </Link>
 
         <!-- Master Data -->
         <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
@@ -161,3 +186,78 @@ const reportMenus = [
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.bb-ai-banner {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 1.1rem;
+    padding: 1.25rem 1.4rem;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #6d28d9, #4f46e5 52%, #0e7490);
+    box-shadow: 0 16px 34px rgba(79, 70, 229, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bb-ai-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 42px rgba(79, 70, 229, 0.38);
+    color: #fff;
+}
+
+.bb-ai-banner__orb {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    top: -90px;
+    right: -40px;
+    background: rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+}
+
+.bb-ai-banner__body {
+    position: relative;
+    z-index: 1;
+}
+
+.bb-ai-banner__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.bb-ai-banner__title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0.55rem 0 0.2rem;
+}
+
+.bb-ai-banner__desc {
+    font-size: 0.82rem;
+    opacity: 0.9;
+    max-width: 42rem;
+}
+
+.bb-ai-banner__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 0.45rem 0.95rem;
+    border-radius: 100px;
+    background: #fff;
+    color: #4f46e5;
+}
+</style>

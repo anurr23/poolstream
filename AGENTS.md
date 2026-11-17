@@ -17,9 +17,10 @@ Laravel 13 + Inertia.js + Vue 3 + Bootstrap 5. SQLite in test/dev, PostgreSQL in
 - **Frontend:** Vue 3 `<script setup>` (no TS) in `resources/js/Pages/`, resolved via Inertia. Components in `resources/js/Components/`. Custom SCSS (`bb-` prefix classes) at `resources/scss/app.scss`. `@/` alias -> `resources/js/`. Ziggy `route()` helper available globally.
 - **Backend:** Controllers in `app/Http/Controllers/`. Models in `app/Models/`. All routes manually defined (no `Route::resource`).
 - **Routes:** `routes/web.php` (app), `routes/auth.php` (Breeze). Admin routes under `role:admin` middleware at `/master/*`. No `/register` route -- admin-only user creation via `/master/users`.
-- **Database:** `.env` uses **PostgreSQL** (`billiard` DB, `pgsql` driver). `.env.example` uses **SQLite**. Tests use **in-memory SQLite** (`phpunit.xml`). Sessions/queue/cache all database-backed (non-default).
+- **Database:** `.env` uses **MySQL** (`poolstream` DB, `mysql` driver, `host.docker.internal:3306` — served by the local `mysql-server` Docker container). `.env.example` uses **SQLite**. Tests use **in-memory SQLite** (`phpunit.xml`). Sessions/queue/cache all database-backed (non-default).
 - **Hardware:** `app/Services/relay_controller.py` called via `shell_exec` -- **dummy placeholder** (real `hidapi` code commented out).
 - **Scheduler:** `tables:auto-checkout` completes expired transactions and turns off relays. Every minute.
+- **AI Evaluation:** admin-only `/master/ai-evaluations`. Flow: `ReportDataService` builds an aggregate fact pack (never raw rows by default) → `AiEvaluationService` calls the local 9router endpoint (`config('services.ai')`, env `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` / `AI_TIMEOUT`) → JSON result saved in `ai_evaluations`. The call is synchronous (~10-70s, guarded by `set_time_limit(0)`); 9router needs an explicit `"stream" => false` or it answers with SSE chunks.
 
 ## Domain Model
 

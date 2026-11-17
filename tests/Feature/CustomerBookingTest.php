@@ -239,4 +239,47 @@ class CustomerBookingTest extends TestCase
             ->get('/master')
             ->assertForbidden();
     }
+
+    public function test_customer_cannot_start_table_session(): void
+    {
+        $table = Table::factory()->create();
+
+        $this->actingAs($this->customer())
+            ->post('/tables/'.$table->id.'/start', [
+                'package_id' => Package::factory()->create()->id,
+                'duration_hours' => 1,
+                'customer_name' => 'Test Customer',
+            ])
+            ->assertForbidden();
+
+        $this->assertNotSame('active', $table->refresh()->status);
+    }
+
+    public function test_customer_cannot_start_their_own_booked_session(): void
+    {
+        $customer = $this->customer();
+        $schedule = $this->schedule();
+        $table = Table::factory()->create();
+
+        $booking = Transaction::create([
+            'type' => 'billiard',
+            'table_id' => $table->id,
+            'package_id' => Package::factory()->create()->id,
+            'user_id' => $customer->id,
+            'customer_name' => $customer->name,
+            'start_time' => $schedule['start'],
+            'expected_end_time' => $schedule['start']->copy()->addHour(),
+            'billiard_cost' => 25000,
+            'fnb_cost' => 0,
+            'total_cost' => 25000,
+            'status' => 'booked',
+        ]);
+
+        $this->actingAs($customer)
+            ->post('/tables/bookings/'.$booking->id.'/start')
+            ->assertForbidden();
+
+        $this->assertSame('booked', $booking->refresh()->status);
+        $this->assertNotSame('active', $table->refresh()->status);
+    }
 }

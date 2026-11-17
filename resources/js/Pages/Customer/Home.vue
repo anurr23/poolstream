@@ -1,7 +1,7 @@
 <script setup>
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
     packages: {
@@ -71,6 +71,59 @@ const features = [
     { icon: 'bi-stopwatch', title: 'Timer Otomatis', desc: 'Hitung mundur sesi' },
     { icon: 'bi-wallet2', title: 'Bayar di Tempat', desc: 'Tanpa transfer dulu' },
 ];
+
+// ─── Timer sesi berjalan ────────────────────────────────
+const now = ref(Date.now());
+let tickTimer = null;
+let refreshTimer = null;
+
+const isActive = computed(() => nextBooking.value?.status === 'active');
+
+const formatDuration = (ms) => {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = String(Math.floor(total / 3600)).padStart(2, '0');
+    const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+    const s = String(total % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+};
+
+const elapsedLabel = computed(() => {
+    if (!isActive.value || !nextBooking.value?.start_time) return '00:00:00';
+    return formatDuration(now.value - new Date(nextBooking.value.start_time).getTime());
+});
+
+const remainingMs = computed(() => {
+    if (!isActive.value || !bookingEnd(nextBooking.value)) return 0;
+    return new Date(bookingEnd(nextBooking.value)).getTime() - now.value;
+});
+
+const remainingLabel = computed(() => formatDuration(remainingMs.value));
+
+const isOver = computed(() => isActive.value && remainingMs.value <= 0);
+
+const sessionProgress = computed(() => {
+    if (!isActive.value) return 0;
+    const start = new Date(nextBooking.value?.start_time).getTime();
+    const end = new Date(bookingEnd(nextBooking.value)).getTime();
+    if (!start || !end || end <= start) return 0;
+    return Math.min(100, Math.max(0, ((now.value - start) / (end - start)) * 100));
+});
+
+onMounted(() => {
+    tickTimer = setInterval(() => {
+        now.value = Date.now();
+    }, 1000);
+
+    // Segarkan data booking tiap 30 detik agar timer ikut muncul saat kasir memulai sesi
+    refreshTimer = setInterval(() => {
+        router.reload({ only: ['nextBooking'], preserveScroll: true, preserveState: true });
+    }, 30000);
+});
+
+onUnmounted(() => {
+    clearInterval(tickTimer);
+    clearInterval(refreshTimer);
+});
 </script>
 
 <template>
@@ -153,6 +206,26 @@ const features = [
                         <i class="bi" :class="bookingStatus(nextBooking).icon"></i>
                         {{ bookingStatus(nextBooking).label }}
                     </span>
+                </div>
+
+                <div v-if="isActive" class="bb-home-timer">
+                    <div class="bb-home-timer__cell">
+                        <div class="bb-home-timer__label">
+                            <i class="bi bi-stopwatch"></i> Sudah berjalan
+                        </div>
+                        <div class="bb-home-timer__value">{{ elapsedLabel }}</div>
+                    </div>
+                    <div class="bb-home-timer__cell">
+                        <div class="bb-home-timer__label">
+                            <i class="bi bi-hourglass-split"></i> Sisa waktu
+                        </div>
+                        <div class="bb-home-timer__value" :class="{ 'is-over': isOver }">
+                            {{ isOver ? 'Waktu habis' : remainingLabel }}
+                        </div>
+                    </div>
+                    <div class="bb-home-timer__bar">
+                        <div class="bb-home-timer__fill" :style="{ width: sessionProgress + '%' }"></div>
+                    </div>
                 </div>
 
                 <div class="bb-home-booking__body">
@@ -412,6 +485,61 @@ const features = [
 .bb-home-booking__status.is-active {
     background: rgba(16, 185, 129, 0.14);
     color: #10b981;
+}
+
+.bb-home-timer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+    padding: 0.6rem;
+    border-radius: 0.8rem;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.bb-home-timer__cell {
+    min-width: 0;
+}
+
+.bb-home-timer__label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--bs-secondary-color);
+}
+
+.bb-home-timer__value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #10b981;
+}
+
+.bb-home-timer__value.is-over {
+    font-size: 0.92rem;
+    color: #f59e0b;
+}
+
+.bb-home-timer__bar {
+    grid-column: 1 / -1;
+    height: 5px;
+    border-radius: 100px;
+    background: rgba(16, 185, 129, 0.18);
+    overflow: hidden;
+}
+
+.bb-home-timer__fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    transition: width 0.6s linear;
 }
 
 .bb-home-booking__body {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\AiEvaluationController;
 use App\Http\Controllers\CustomerBookingController;
 use App\Http\Controllers\FnbItemController;
 use App\Http\Controllers\FnbOrderController;
@@ -69,6 +70,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/master/reports/table-transactions', [ReportController::class, 'tableTransactions'])->name('reports.table-transactions');
         Route::get('/master/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
         Route::get('/master/reports/analytics', [ReportController::class, 'analytics'])->name('reports.analytics');
+
+        // Evaluasi AI (analisa semua report oleh AI lokal)
+        Route::get('/master/ai-evaluations', [AiEvaluationController::class, 'index'])->name('ai-evaluations.index');
+        Route::post('/master/ai-evaluations', [AiEvaluationController::class, 'store'])->name('ai-evaluations.store');
+        Route::get('/master/ai-evaluations/{evaluation}', [AiEvaluationController::class, 'show'])->name('ai-evaluations.show');
+        Route::delete('/master/ai-evaluations/{evaluation}', [AiEvaluationController::class, 'destroy'])->name('ai-evaluations.destroy');
     });
 });
 

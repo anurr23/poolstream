@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dev OPcache Endpoint
+    |--------------------------------------------------------------------------
+    |
+    | Token untuk endpoint dev-only /__dev/opcache yang menyegarkan OPcache
+    | setelah file PHP berubah (dipakai scripts/watch-opcache.ps1).
+    |
+    */
+
+    'dev_opcache_token' => env('DEV_OPCACHE_TOKEN'),
+
 ];

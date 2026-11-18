@@ -14,6 +14,42 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Endpoint dev-only: segarkan OPcache setelah file PHP berubah.
+// Dipakai oleh scripts/watch-opcache.ps1 agar tidak perlu restart container.
+Route::get('/__dev/opcache', function (Illuminate\Http\Request $request) {
+    abort_unless(app()->environment(['local', 'testing']), 404);
+
+    $token = (string) config('app.dev_opcache_token');
+    abort_if($token === '', 404);
+    abort_unless(hash_equals($token, (string) $request->query('token')), 403);
+
+    $paths = $request->query('path', []);
+    $paths = is_array($paths) ? $paths : [$paths];
+    $paths = array_values(array_filter($paths, 'is_string'));
+
+    if ($paths === []) {
+        $ok = function_exists('opcache_reset') ? @opcache_reset() : false;
+
+        return response()->json(['mode' => 'reset', 'ok' => $ok]);
+    }
+
+    $basePath = realpath(base_path());
+    $files = [];
+
+    foreach ($paths as $path) {
+        $absolute = realpath(base_path($path));
+
+        if (! $absolute || ! $basePath || ! str_starts_with($absolute, $basePath) || ! str_ends_with($absolute, '.php')) {
+            continue;
+        }
+
+        $ok = function_exists('opcache_invalidate') ? @opcache_invalidate($absolute, true) : false;
+        $files[] = ['path' => $path, 'ok' => (bool) $ok];
+    }
+
+    return response()->json(['mode' => 'invalidate', 'files' => $files]);
+})->middleware('throttle:120,1')->name('dev.opcache');
+
 // Landing page utama (publik). Klik menu diarahkan ke login bila belum ada session.
 Route::get('/', function () {
     return Inertia::render('Landing');

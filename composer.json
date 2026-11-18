@@ -58,6 +58,10 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "watch:opcache": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php -r \"passthru('powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -File ' . escapeshellarg(__DIR__ . '/scripts/watch-opcache.ps1'));\""
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

@@ -52,6 +52,25 @@ Laravel 13 + Inertia.js + Vue 3 + Bootstrap 5. SQLite in test/dev, PostgreSQL in
 - **4-space indent, LF line endings** (`.editorconfig`).
 - **No pagination** in backend queries (all `->get()`).
 
+## Performance (Docker + Windows bind mount)
+
+The project is bind-mounted from Windows into the `php8.5-apache` container, so `stat()` is ~340x slower than the container filesystem. With OPcache `validate_timestamps=On` (default), every request re-stats hundreds of files and page loads jump from ~0.35s to 2-8s. `docker/php/zzz-performance.ini` disables timestamp validation and grows the realpath cache:
+
+```sh
+docker cp docker/php/zzz-performance.ini php8.5-apache:/usr/local/etc/php/conf.d/
+docker restart php8.5-apache
+```
+
+Trade-off: PHP changes are only picked up after OPcache is reset. Two ways to do that:
+
+- Automatic (recommended): run the watcher, which invalidates just the changed files through the dev-only endpoint `GET /__dev/opcache` (guarded by `APP_ENV=local` + `DEV_OPCACHE_TOKEN`).
+
+```sh
+composer watch:opcache          # or: powershell -ExecutionPolicy Bypass -File scripts/watch-opcache.ps1
+```
+
+- Manual: `docker restart php8.5-apache`, or `curl "http://localhost/poolstream/__dev/opcache?token=<DEV_OPCACHE_TOKEN>"` for a full reset.
+
 ## Future Plans / Roadmap
 
 1. **Real Hardware Integration (Relay Biliar)**
